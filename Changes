@@ -3,3 +3,8 @@ Revision history for Perl extension Tk::Log.
 0.01  Wed Jul 23 17:02:08 1997
 	- original version; created by h2xs 1.18
 
+0.02 Mon 1.12.1997
+        - bug fix
+        - better README
+
+

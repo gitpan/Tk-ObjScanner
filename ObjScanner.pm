@@ -65,7 +65,7 @@ sub Populate
 
     my $w_frame_list = $w_frame->Listbox
       (
-       font => '-bitstream-prestige-medium-r-normal--16-100-72-72-m-60-hp-roman8',
+       #font => '-bitstream-prestige-medium-r-normal--16-100-72-72-m-60-hp-roman8',
        -xscrollcommand => [$w_frame_scroll_h => 'set'],
        -yscrollcommand => [$w_frame_scroll => 'set'],
        -setgrid        => 1,
@@ -106,30 +106,6 @@ sub Populate
 
     $cw->ConfigSpecs(DEFAULT => [$window]) ;
     $cw->Delegates(DEFAULT => $window ) ;
-  }
-
-sub listScan
-  {
-    my $cw = shift ;
-    my $ref =  shift ; # thing to dump
-
-    my $key ;
-    my $refs = [] ;
-    my $names = [] ;
-    foreach $key (keys %$ref)
-      {
-	push @$names, $key ;
-	push @$refs, $ref->{$key} ;
-      }
-    my $d = Data::Dumper->new ( $refs, $names ) ;
-    $cw->{dodu}{dumpWindow}->insertText($d->Dumpxs) ;
-  }
-
-sub updateListBox
-  {
-    my $cw = shift ;
-    $cw->{dodu}{listbox}->delete(0,'end') ;
-    $cw->{dodu}{listbox}->insert('end', sort  keys %{$cw->{dodu}{chief}} );
   }
 
 
@@ -185,3 +161,30 @@ Dominique Dumont, Dominique_Dumont@grenoble.hp.com
 perl(1), Tk(3), Tk::Multi::Text(3), Data::Dumper(3)
 
 =cut
+
+# autoload methods
+
+sub listScan
+  {
+    my $cw = shift ;
+    my $ref =  shift ; # thing to dump
+
+    my $key ;
+    my $refs = [] ;
+    my $names = [] ;
+    foreach $key (keys %$ref)
+      {
+	push @$names, $key ;
+	push @$refs, $ref->{$key} ;
+      }
+    my $d = Data::Dumper->new ( $refs, $names ) ;
+    $cw->{dodu}{dumpWindow}->insertText($d->Dumpxs) ;
+  }
+
+sub updateListBox
+  {
+    my $cw = shift ;
+    $cw->{dodu}{listbox}->delete(0,'end') ;
+    $cw->{dodu}{listbox}->insert('end', sort  keys %{$cw->{dodu}{chief}} );
+  }
+
