@@ -1,3 +1,10 @@
+2000-04-17  Dominique Dumont  <domi@ispserv.grenoble.hp.com>
+
+	* ObjScanner.pm: 
+	- fixed a bug related to root display
+	- added a patch provided by Rudi Farkas to display a watch cursor
+	  when displaying a sub-object
+
 1999-07-06  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.017
 
 	* ObjScanner.pm (element): bug fix on string display

@@ -2,7 +2,7 @@ The scanner provide a GUI to scan the attributes of an object. It can
 also be used to scan the elements of a hash or an array.
 
 The scanner is a composite widget made of a HList and a text window
-(actually a L<TK::ROText>). This widget acts as a scanner to the
+(actually a TK::ROText). This widget acts as a scanner to the
 object (or hash ref) passed with the 'caller' parameter. The scanner
 will retrieve all keys of the hash/object and insert them in the
 HList.
@@ -16,7 +16,7 @@ If the value is a scalar, the scalar will be displayed in the text window.
 Note that the look and fell is completely changed compared to previous
 version. 
 
-This module was written with perl5.00502 and Tk 800.013
+This module was written with perl5.00503 and Tk 800.020
 
 See the embedded documentation in the module for more details.
 
@@ -24,6 +24,8 @@ Comments and suggestions are always welcome.
 
 Many thanks to Achim Bohnet for all the tests, patches (and reports) he 
 made. Many improvements were made thanks to his efforts.
+
+Thanks to Rudi Farkas for the 'watch' patch.
 
 Legal mumbo jumbo:
 

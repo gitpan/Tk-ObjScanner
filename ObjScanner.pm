@@ -3,6 +3,15 @@ package Tk::ObjScanner;
 use strict;
 use vars qw($VERSION @ISA $errno);
 
+# Patch proposed by Rudi Farkas rudif@lecroy.com
+# Purpose: while executing displaySubItem() which may take a long time
+# if getting data from disk, another package or another machine,
+# the default arrow cursor is replaced by a 'watch' cursor.
+# The patch consists of
+# - ConfigSpecs item : oldcursor => undef
+# - method _swapCursor()
+# - 3 calls to _swapCursor inside displaySubItem(), at entry and at 2 exits
+
 use Carp ;
 use Tk::Derived ;
 use Tk::Frame;
@@ -10,7 +19,7 @@ use Tk::Frame;
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -64,8 +73,6 @@ sub Populate
     $cw->{itemImg} = $cw->Bitmap(-file => Tk->findINC('file.xbm'));
     $cw->{foldImg} = $cw->Bitmap(-file => Tk->findINC('folder.xbm'));
 
-    $cw->{idx}=0;
-
     $cw->Advertise(hlist => $hlist);
 
 
@@ -83,6 +90,7 @@ sub Populate
                      scrollbars=> [$hlist, undef, undef,'osoe'],
                      width => [$hlist, undef, undef, 80],
                      height => [$hlist, undef, undef, 15],
+                     oldcursor => undef,
                      DEFAULT => [$hlist]) ;
     $cw->Delegates(DEFAULT => $hlist ) ;
 
@@ -104,20 +112,21 @@ sub updateListBox
     my $h = $cw->Subwidget('hlist');
     my $root = 'root';
     #print "root adding $root \n";
-
-    $h->add
-      (
-       $root,
-       -text => "ROOT:".ref($cw->{chief}), 
-       -image => $cw->{foldImg},
-       -data => $cw->{idx}++ 
-      ) unless $h->infoExists($root);
-
-    my @children = $h->infoChildren($root);
-    if (scalar @children > 0)
+    if ($h->infoExists($root))
       {
+        print "deleting root children\n";
         $cw->{dumpWindow}->delete('1.0','end');
         $h->deleteOffsprings($root);
+      }
+    else
+      {
+        $h->add
+          (
+           $root,
+           -text => "ROOT:".ref($cw->{chief}), 
+       -image => $cw->{foldImg},
+           -data => $cw->{chief} 
+          ) 
       }
 
     $cw->displaySubItem($root,$cw->{chief});
@@ -132,16 +141,16 @@ sub displaySubItem
 
     $cw->{dumpWindow}->delete('1.0','end');
 
-    unless ($name eq 'root')
-      {
-        my @children = $h->infoChildren($name) ;
+    my @children = $h->infoChildren($name) ;
 
-        if( scalar @children > 0 ) 
-          {
-            $h->deleteOffsprings($name);
-            return ;
-          }
+    foreach my $child ( @children ) 
+      {
+        if ($h->info('hidden',$child)) {$h->show('entry',$child);}
+        else {$h->hide('entry',$child);}
       }
+    return if scalar(@children) > 0;
+
+    $cw->_swapCursor('watch');
 
     my $ref = ref($item) ;
     my $isObject = isObject($ref) ;
@@ -214,6 +223,7 @@ sub displaySubItem
         #print "adding scalar $name , $item is a scalar\n";
         $cw->{dumpWindow}->insert('end',$item);
       }
+       $cw->_swapCursor();
   }
 
 sub element
@@ -258,6 +268,19 @@ sub element
     $what .= " ($nb)" if defined $nb;
     return $what ;
   }
+
+sub _swapCursor {
+       my ($cw, $cursor) = @_;
+    my $parent = $cw->parent;
+       if (defined($cursor)) {
+       $cw->{oldcursor} = $parent->cget('-cursor'); # save
+           $parent->configure(-cursor => $cursor);      # replace
+       }
+       else {
+           $parent->configure(-cursor => $cw->{oldcursor}); # restore
+       }
+    $parent->update;   # does not seem to be absolutely necessary
+}
 
 1;
 
@@ -333,7 +356,7 @@ the HList items.
 
 Dominique Dumont, Dominique_Dumont@grenoble.hp.com
 
-Copyright (c) 1997-1999 Dominique Dumont. All rights reserved.
+Copyright (c) 1997-2000 Dominique Dumont. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
