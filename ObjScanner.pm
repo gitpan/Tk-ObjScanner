@@ -1,4 +1,4 @@
-# 	$Id: ObjScanner.pm,v 2.6 2003/11/19 12:59:10 domi Exp $	
+# 	$Id: ObjScanner.pm,v 2.7 2003/11/28 17:16:19 domi Exp $	
 
 package Tk::ObjScanner;
 
@@ -51,8 +51,8 @@ use Scalar::Util qw(weaken isweak);
 # hash ref or a ref to an array ref. Hence the item attribute of the
 # itemcget data part of Hlist is changed to item_ref.
 
-# Furthermore to avoid memroy leak if the user modifies its data
-# structure, the ref kept must be weakened (See WeakRef man page)
+# Furthermore to avoid memory leak if the user modifies its data
+# structure, the ref kept must be weakened (See Scalar::Util man page)
 
 
 use Carp ;
@@ -64,7 +64,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.6 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -103,7 +103,7 @@ sub _scan
     my $cw = shift ;
     my $topName = shift ;
     $cw->yview($topName) ;
-    $cw->after(200); # sleep 300ms
+    $cw->after(200); # sleep 200ms
 
     foreach my $c ($cw->infoChildren($topName))
       {

@@ -152,7 +152,7 @@ my $s = $mw -> ObjScanner ('-caller' => $dummy, -columns => 4, -header => 1 );
 
 $s->headerCreate(1,-text =>'coucou') ;
 
-$s -> pack(-expand => 1, fill => 'both') ;
+$s -> pack(-expand => 1, -fill => 'both') ;
 
 print "ok ",$idx++,"\n";
 

@@ -29,8 +29,8 @@ The scanner recognizes:
 
 Pseudo-hashes are deprecated.
 
-This module was written with perl5.8.2 and Tk 800.024. But should work
-with older versions of perl (> 5.6.1) or Tk.
+This module was tested with perl5.8.2 and Tk 804.025 (beta). But
+should work with older versions of perl (> 5.6.1) or Tk.
 
 See the embedded documentation in the module for more details.
 
