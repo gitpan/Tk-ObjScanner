@@ -1,3 +1,8 @@
+1999-04-29  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.014
+
+	* ObjScanner.pm (element): Support REF and SCALAR, and does not
+ 	choke on GLOB ,CODE.
+
 1999-04-21  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.013
 
 	* ObjScanner.pm : Complete re-write. It now uses HList instead of 

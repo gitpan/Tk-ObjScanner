@@ -9,7 +9,7 @@ use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -128,7 +128,13 @@ sub displaySubItem
           }
       }
 
-    if (ref($item) eq 'ARRAY')
+    if (not defined $item)
+      {
+        #print "adding scalar $name , $item is a scalar\n";
+        $cw->{dumpWindow}->delete('1.0','end');
+        $cw->{dumpWindow}->insert('end',"undefined value\n");
+      }
+    elsif (ref($item) eq 'ARRAY')
       {
         my $i;
         foreach (@$item)
@@ -140,6 +146,26 @@ sub displaySubItem
                          -text => '['.$i++."]-> ".$cw->element($_), 
                          -data => $_);
           }
+      }
+    elsif (ref($item) eq 'REF')
+      {
+        $h->addchild($name,
+                     -image => $cw->{foldImg},
+                     -text => $cw->element($$item), 
+                     -data => $$item);
+      }
+    elsif (ref($item) eq 'SCALAR')
+      {
+        $h->addchild($name,
+                     -image => $cw->{itemImg},
+                     -text => $cw->element($$item), 
+                     -data => $$item);
+      }
+    elsif ( ref($item) eq 'CODE' or ref($item) eq 'GLOB')
+      {
+        $cw->{dumpWindow}->delete('1.0','end');
+        $cw->{dumpWindow}->
+          insert('end',"Sorry, can't display ".ref($item)." reference");
       }
     elsif (ref($item))
       {
@@ -169,13 +195,22 @@ sub element
     my $cw = shift ;
     my $elt = shift;
 
-    if (ref($elt) eq 'ARRAY')
+    if (not defined $elt)
+      {
+        return 'undefined';
+      }
+    elsif (ref($elt) eq 'ARRAY')
       {
         return "ARRAY (".scalar @$elt.")";
       }
     elsif (ref($elt) eq 'HASH')
       {
         return 'HASH ('. scalar keys(%$elt) . ')';
+      }
+    elsif (ref($elt) eq 'REF' or ref($elt) eq 'SCALAR' or
+           ref($elt) eq 'CODE' or ref($elt) eq 'GLOB' )
+      {
+        return ref($elt);
       }
     elsif (ref($elt))
       {
@@ -184,10 +219,6 @@ sub element
     elsif ($elt =~ /\n/)
       {
         return 'double click here to display value';
-      }
-    elsif (not defined $elt)
-      {
-        return 'undefined';
       }
     else
       {
@@ -241,6 +272,13 @@ by the scanner.
 Update the keys of the listbox. This method may be handy if the
 scanned object wants to update the listbox of the scanner 
 when the scanned object gets new attributes.
+
+=head1 CAVEATS
+
+ObjScanner will fail if an object is actually a blessed scalar or a
+blessed array. If someone knows how to get the type of the reference
+that was blessed into an object from the object reference, I'd be glad
+to hear from him.
 
 =head1 AUTHOR
 

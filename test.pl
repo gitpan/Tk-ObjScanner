@@ -28,13 +28,19 @@ sub new
   {
     my $type = shift ;
     my $tkstuff = shift ;
+    my $scalar = 'dummy scalar ref value';
+    open (FILE,"test.pl") || die "can't open myself !\n";
+    my $glob = \*FILE ; # ???
     my $self = { 'key1' => 'value1',
                  'array' => [qw/a b sdf/, {'v1' => '1', 'v2' => 2},'dfg'],
                  'key2' => {
                             'sub key1' => 'sv1',
                             'sub key2' => 'sv2'
                            },
+                 'some_code' => sub {print "some_code\n";},
                  'piped|key' => {a => 1 , b => 2},
+                 'scalar_ref_ref' => \\$scalar,
+                 'filehandle' => $glob,
                  'long' => 'very long line'.'.' x 80 ,
                  'is undef' => undef,
                  'some text' => "some \n dummy\n Text\n",
