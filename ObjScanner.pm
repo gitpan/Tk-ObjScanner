@@ -1,29 +1,29 @@
 package Tk::ObjScanner;
 
 use strict;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $errno);
+use vars qw($VERSION @ISA $errno);
 
 use Carp ;
 use Tk ;
 use Tk::Multi::Text ;
-
 use Data::Dumper ;
+use AutoLoader 'AUTOLOAD' ;
 
-require Exporter;
-require AutoLoader;
-
-@ISA = qw(Tk::Frame AutoLoader);
+@ISA = qw(Tk::Frame);
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
-@EXPORT = qw(
-	
-);
+
 $VERSION = '0.01';
 
 Tk::Widget->Construct('ObjScanner');
 
 # Preloaded methods go here.
+
+#stubs
+sub dumpKeyContent ;
+sub listScan ;
+sub updateListBox ;
 
 # Autoload methods go after =cut, and are processed by the autosplit program.
 
@@ -84,15 +84,13 @@ sub Populate
        sub  {
 	 my $item = shift ;
 	 my $key = $item->get ('active') ;
-         my %hash ;
-         $hash{$key} = $cw->{dodu}{chief}{$key} ;
-         $cw->listScan(\%hash) ;
+         $cw->dumpKeyContent($key) ;
        }
       ) ;
 
     # fill list box 
-    $w_frame_list->insert('end', sort  keys %{$cw->{dodu}{chief}} );
     $cw->{dodu}{listbox}= $w_frame_list ;
+    $cw->updateListBox;
 
     #pack MultiText
     my $window = $cw->{dodu}{dumpWindow} = 
@@ -164,10 +162,20 @@ perl(1), Tk(3), Tk::Multi::Text(3), Data::Dumper(3)
 
 # autoload methods
 
+sub dumpKeyContent
+  {
+    my $cw = shift ;
+    my $key =  shift ; # key to dump
+    
+    my %hash ;
+    $hash{$key} = $cw->{dodu}{chief}{$key} ;
+    $cw->listScan(\%hash) ;
+  }
+
 sub listScan
   {
     my $cw = shift ;
-    my $ref =  shift ; # thing to dump
+    my $ref =  shift ; # thing to dump, must be a hash ref
 
     my $key ;
     my $refs = [] ;

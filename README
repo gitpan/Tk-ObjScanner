@@ -4,8 +4,10 @@ The scanner will retrieve all keys of the hash of the scanned object
 and insert them in the listbox. Then a double click on the list item will
 display its content in the text window.
 
-I found that this widget is really handy when debugging complex Tk 
-applications which features lot of independant object.
+I grant you that reading all the attributes of an object is generally
+considered as bad manners. But I found that this widget is really handy 
+when debugging complex Tk applications which features lot of independent 
+objects.
 
 
 This module was written with perl5.004 and Tk 402.003
@@ -14,17 +16,12 @@ See the embedded documentation in the module for more details.
 
 Comments and suggestions are always welcome.
 
-Note that this module is in alpha state. Its interface may change (but
-I hope not).
-
-Alpha exit criteria:
-- When some peoples (well, say 10 guys) tell me that they've used it 
-  and did not find major bug with the module or minor problems with the 
-  interface.
+Note that this module is in beta state. Its interface is not expected 
+to change anymore
 
 Legal mumbo jumbo:
 
- Copyright (c) 1995 Dominique Dumont. All rights reserved.
+ Copyright (c) 1997-1998 Dominique Dumont. All rights reserved.
  This program is free software; you can redistribute it and/or
  modify it under the same terms as Perl itself.
 

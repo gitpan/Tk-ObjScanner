@@ -4,7 +4,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile
   (
    'NAME'	=> 'Tk::ObjScanner',
-   'VERSION' => '0.02', # finds $VERSION
+   'VERSION' => '0.1',
    'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
    'PREREQ_PM' =>
    {
