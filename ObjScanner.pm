@@ -41,7 +41,7 @@ use Tk::Frame;
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -120,8 +120,6 @@ sub Populate
     $menu -> command (-label => 'destroy', 
                       command => sub{$cw->destroy; }) if $destroyable ;
 
-    $cw->updateListBox;
-
     $cw->ConfigSpecs
       (
        scrollbars=> ['DESCENDANTS', undef, undef, 'osoe'],
@@ -133,10 +131,25 @@ sub Populate
        oldcursor => [$hlist, undef, undef, undef],
        DEFAULT => [$hlist]
       ) ;
-                     
+
     $cw->Delegates(DEFAULT => $hlist ) ;
 
     $cw->SUPER::Populate($args) ;
+
+    $cw->{viewpseudohash} =1;
+
+    $menuframe -> Checkbutton 
+      (
+       -text => 'view pseudo-hashes',
+       -variable => \$cw->{viewpseudohash},
+       -onvalue => 1, 
+       -offvalue => 0,
+       -command => sub{$cw->updateListBox;}
+      ) -> pack(side => 'right');
+
+    $cw->updateListBox;
+
+    return $cw ;
   }
 
 sub isObject
@@ -145,6 +158,28 @@ sub isObject
     return 0 unless $ref ;
     return  
       scalar grep ($ref eq $_, qw/REF SCALAR CODE GLOB ARRAY HASH/) ? 0 : 1;
+  }
+
+# function to find whether a reference is a pseudo hash
+# return the nb of elements of the pseudo hash
+sub isPseudoHash 
+  {
+    my $cw = shift ;
+    my $item = shift;
+
+    return 0 unless ($cw->{viewpseudohash} &&
+                     isa($item,'ARRAY')              &&
+                     scalar @$item                   &&
+                     ref $item->[0] eq 'HASH');
+
+    my $ret = scalar keys %{ $item->[0] } ;
+    return 0 unless $ret >= scalar @$item - 1;
+
+    for (values %{ $item->[0] }) 
+      {
+        return 0 if ($_ !~ /^\d+$/ || $_ < 1);
+      }
+    return $ret ;
   }
 
 sub updateListBox
@@ -159,13 +194,16 @@ sub updateListBox
         #print "deleting root children\n";
         $cw->{dumpWindow}->delete('1.0','end');
         $h->deleteOffsprings($root);
+
+        # set new text of root
+        $h->entryconfigure($root,-text => "ROOT:".$cw->element($cw->{chief}));
       }
     else
       {
         $h->add
           (
            $root,
-           -text => "ROOT:".ref($cw->{chief}), 
+           -text => "ROOT:".$cw->element($cw->{chief}),
            -image => $cw->{foldImg},
            -data => $cw->{chief} 
           ) 
@@ -198,6 +236,8 @@ sub displaySubItem
     my $ref = ref($item) ;
     my $isObject = isObject($ref) ;
 
+    my $isPseudoHash = $cw->isPseudoHash($item);
+
     #print "ref is $ref\n";
     if (not defined $item)
       {
@@ -205,7 +245,7 @@ sub displaySubItem
         $cw->{dumpWindow}->delete('1.0','end');
         $cw->{dumpWindow}->insert('end',"undefined value\n");
       }
-    elsif (isa($item,'ARRAY'))
+    elsif (isa($item,'ARRAY') and not $isPseudoHash)
       {
         my $i;
         foreach (@$item)
@@ -246,7 +286,7 @@ sub displaySubItem
               insert('end',"Sorry, can't display ".$ref." reference");
           }
       }
-    elsif (isa($item, 'HASH'))
+    elsif (isa($item, 'HASH') or $isPseudoHash)
       {
         # hash or object
 
@@ -276,6 +316,8 @@ sub element
     my $elt = shift;
 
     my ($what,$nb);
+    my $pseudo = $cw->isPseudoHash($elt) ;
+
     my $ref = ref($elt) ;
 
     if (not defined $elt)
@@ -285,10 +327,15 @@ sub element
     elsif ($ref and isa($elt,'UNIVERSAL'))
       {
         my $base ;
-        if (isa($elt,'SCALAR')) {$base = 'SCALAR'}
+        if ($pseudo) {$base = 'PSEUDO-HASH';} 
+        elsif (isa($elt,'SCALAR')) {$base = 'SCALAR'}
         elsif ($elt =~ /=([A-Z]+)\(/) {$base = $1 ;}
         else {$base = "some magic with $elt" ;}  # desperate measure
         $what = "$ref OBJECT based on $base";
+      }
+    elsif ($pseudo)
+      {
+        $what = 'PSEUDO-HASH';
       }
     elsif ($ref)
       {
@@ -306,8 +353,12 @@ sub element
         $what =  "'$elt'" ;        
       }
     
-    $nb = scalar @$elt if defined $elt && isa($elt,'ARRAY') ;
-    $nb = scalar keys(%$elt) if defined $elt && isa($elt,'HASH') ;
+    if (defined $elt)
+      {
+        if ($pseudo)              {$nb = $pseudo;}
+        elsif (isa($elt,'ARRAY')) {$nb = scalar @$elt}
+        elsif (isa($elt,'HASH'))  {$nb = scalar keys(%$elt)}
+      }
 
     $what .= " ($nb)" if defined $nb;
     return $what ;
@@ -342,7 +393,7 @@ __END__
 
 =head1 NAME
 
-Tk::ObjScanner - Tk composite widget object scanner
+Tk::ObjScanner - Tk data scanner
 
 =head1 SYNOPSIS
 
@@ -430,6 +481,9 @@ when the scanned object gets new attributes.
 
 =head1 CAVEATS
 
+The name of the widget is misleading as any data (not only object) may
+be scanned. This widget is in fact a DataScanner.
+
 ObjScanner may fail if an object involves a lot of internal perl
 magic.  In this case, I'd be glad to hear about and I'll try to fix
 the problem.
@@ -438,15 +492,23 @@ ObjScanner does not detect recursive data structures. It will just
 keep on displaying the tree until the user gets tired of clicking on
 the HList items.
 
+There's no sure way to detect if a reference is a pseudo-hash or
+not. When a reference is believed to be a pseudo-hash, ObjScanner will
+display the content of the reference like a hash. If the reference is
+should not be displayed like a pseudo-hash, you can turn off the
+pseudo-hash view with the check button on the top right of the widget.
+
 =head1 THANKS
 
 To Rudi Farkas for all the improvements provided to ObjScanner.
+
+To Slaven Rezic for the propotype code of the pseudo-hash viewer.
 
 =head1 AUTHOR
 
 Dominique Dumont, Dominique_Dumont@grenoble.hp.com
 
-Copyright (c) 1997-2000 Dominique Dumont. All rights reserved.
+Copyright (c) 1997-2001 Dominique Dumont. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

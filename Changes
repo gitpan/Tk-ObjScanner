@@ -1,4 +1,9 @@
-2000-06-07  Dominique Dumont  <domi@ISPSERV.grenoble.hp.com>
+2001-01-12  Dominique Dumont  <domi@komarr.grenoble.hp.com> v1.020
+
+	* ObjScanner.pm:
+	- added pseudo hash viewer
+
+2000-06-07  Dominique Dumont  <domi@ISPSERV.grenoble.hp.com> v1.019
 
 	* ObjScanner.pm: 
 
@@ -10,7 +15,7 @@
 	5: add 'open folder' image and display it when item has displayed
 	   children
 
-2000-04-17  Dominique Dumont  <domi@ispserv.grenoble.hp.com>
+2000-04-17  Dominique Dumont  <domi@ispserv.grenoble.hp.com> v1.018
 
 	* ObjScanner.pm: 
 	- fixed a bug related to root display

@@ -40,10 +40,11 @@ use Math::BigInt;
 
 sub new
   {
-     my $type = shift;
-     my $tkstuff = shift;
+    my $type = shift;
+    # add recursive data only if interactive test
+    my $tkstuff = $trace ? shift : "may be another time ..." ;
 
-     my $scl = 'my scalar var';
+    my $scl = 'my scalar var';
 
     my $self = { 'scalar: key1'    => 'value1',
                  'ref array:'            => [qw/a b sdf/, {'v1' => '1', 'v2' =>
@@ -77,6 +78,7 @@ package main;
 
 my $toto ;
 my $mw = MainWindow-> new ;
+$mw->geometry('+10+10');
 
 my $w_menu = $mw->Frame(-relief => 'raised', -borderwidth => 2);
 $w_menu->pack(-fill => 'x');
@@ -92,7 +94,7 @@ my $dummy = new toto ($mw);
 print "ok ",$idx++,"\n";
 
 print "Creating obj scanner\n" if $trace ;
-$mw -> ObjScanner
+my $s = $mw -> ObjScanner
   (
    caller 		    => $dummy,
    title 		    => 'test scanner options',
@@ -101,12 +103,36 @@ $mw -> ObjScanner
    foldImage 		=> $mw->Photo(-file => Tk->findINC('folder.xpm')),
    openImage 		=> $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
    itemImage 		=> $mw->Photo(-file => Tk->findINC('textfile.xpm'))
-  )
-  -> pack(expand => 1, fill => 'both') ;
+  );
+$s  -> pack(expand => 1, fill => 'both') ;
 
 print "ok ",$idx++,"\n";
 
-MainLoop ; # Tk's
+$mw->idletasks;
+
+sub scan
+  {
+    my $topName = shift ;
+    $s->yview($topName) ;
+    $mw->after(200); # sleep 300ms
+
+    foreach my $c ($s->infoChildren($topName))
+      {
+        my $item = $s->info('data', $c);
+        $s->displaySubItem($c,$item);
+        scan($c);
+      }
+    $mw->idletasks;
+  }
+
+if ($trace)
+  {
+    MainLoop ; # Tk's
+  }
+else
+  {
+    scan('root');
+  }
 
 print "ok ",$idx++,"\n";
 
