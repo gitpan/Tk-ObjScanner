@@ -6,9 +6,12 @@ WriteMakefile
    'NAME'	=> 'Tk::ObjScanner',
    'VERSION_FROM' => 'ObjScanner.pm',
    'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
+   ($] >= 5.005 ?
+    (ABSTRACT   => 'A scanner to view an object\'s attribute',
+     AUTHOR     => 'Dominique Dumont (domi@barrayar.grenoble.hp.com)') : ()),
    'PREREQ_PM' =>
    {
     'Data::Dumper' => 0,
-    'Tk::Multi::Text' => '2.001'
+    'Tk::ROText' => 0
    }
 );

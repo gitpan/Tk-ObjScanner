@@ -9,7 +9,7 @@ use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = '0.5';
+$VERSION = sprintf "%d.%03d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -19,8 +19,8 @@ sub Populate
     
     require Tk::Menubutton ;
     require Tk::Listbox ;
-    require Tk::Multi::Text ;
-
+    require Tk::ROText ;
+    
     $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
@@ -61,17 +61,20 @@ sub Populate
     $cw->{listbox}= $sList ;
     $cw->updateListBox;
 
-    #pack MultiText
     my $window = $cw->{dumpWindow} = 
-      $cw -> MultiText ('menu_button' => $menu ->cget('menu'))
+      $cw -> Scrolled('ROText')
         -> pack(side => 'right',-expand => 'yes', -fill => 'both') ;
+
+    $menu -> command (-label => 'clear', 
+                      command => sub{$window->delete('1.0','end'); });
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
                       command => sub{$cw->destroy; });
 
     $cw->ConfigSpecs(
-                     'scrollbars'=> [$window, undef, undef,'osoe'],
+                     scrollbars=> [$window, undef, undef,'osoe'],
+                     wrap => [$window , undef, undef, 'none' ],
                      width => [$window, undef, undef, 60],
                      height => [$window, undef, undef, 15],
                      DEFAULT => [$window]) ;
@@ -105,7 +108,7 @@ sub listScan
       }
     require Data::Dumper;
     my $d = Data::Dumper->new ( $refs, $names ) ;
-    $cw->{dumpWindow}->insertText($d->Dumpxs) ;
+    $cw->insert('end',$d->Dumpxs) ;
   }
 
 sub updateListBox
@@ -125,49 +128,49 @@ Tk::ObjScanner - Tk composite widget object scanner
 
 =head1 SYNOPSIS
 
-  use Tk::Multi::Text;
+  use Tk::ObjScanner;
   
-  my $mgr = Tk::ObjScanner->new( caller => $object, [title=>"windows"]);
+  my $scanner = $mw->ObjScanner( caller => $object, 
+                                 [title=>"windows"]) -> pack ;
 
 =head1 DESCRIPTION
 
-The scanner is a composite widget made of a listbox and a test window
-(actually a Multi::Text). This widget acts as a scanner to the object passed
-with the 'caller' parameter. The scanner will 
-retrieve all keys of the hash/object and insert them in the listbox.
+The scanner is a composite widget made of a listbox and a text window
+(actually a L<TK::ROText>). This widget acts as a scanner to the
+object passed with the 'caller' parameter. The scanner will retrieve
+all keys of the hash/object and insert them in the listbox.
 
 When the user double clicks on the key, the value will be displayed in the 
 text window. If the key value is itself a ref, the content of the ref 
-is recursively displayed in the text window (thanks to Data::Dumper).
+is recursively displayed in the text window (thanks to L<Data::Dumper>).
 
 =head1 Constructor parameters
 
-The mandatory 'caller' parameter will contains the ref of the object to 
-scan.
+The mandatory 'caller' parameter will contains the ref of the object
+to scan.
 
-The optionnal 'title' argument contains the title of the menu created by the 
-scanner.
+The optionnal 'title' argument contains the title of the menu created
+by the scanner.
 
 =head1 WIDGET-SPECIFIC METHODS
 
 =head2 updateListBox
 
-Update the keys of the listbox. This method may be handy if the scanned object
-wants to update the listbox if it has defined some new keys.
-
-
+Update the keys of the listbox. This method may be handy if the
+scanned object wants to update the listbox of the scanner 
+when the scanned object gets new attributes.
 
 =head1 AUTHOR
 
 Dominique Dumont, Dominique_Dumont@grenoble.hp.com
 
-Copyright (c) 1997-1998 Dominique Dumont. All rights reserved.
+Copyright (c) 1997-1999 Dominique Dumont. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-perl(1), Tk(3), Tk::Multi::Text(3), Data::Dumper(3)
+perl(1), Tk(3), Tk::ROText(3), Data::Dumper(3)
 
 =cut
 

@@ -1,5 +1,5 @@
 ObjScanner is a composite widget made of a listbox and a test window
-(actually a Multi::Text). This widget acts as a scanner to any perl object.
+(actually a Tk::ROText). This widget acts as a scanner to any perl object.
 The scanner will retrieve all keys of the hash of the scanned object 
 and insert them in the listbox. Then a double click on the list item will
 display its content in the text window.
@@ -16,15 +16,12 @@ See the embedded documentation in the module for more details.
 
 Comments and suggestions are always welcome.
 
-Note that this module is in beta state. It's interface is not expected 
-to change anymore
-
 Many thanks to Achim Bohnet for all the tests, patches (and reports) he 
 made. Many improvements were made thanks to his efforts.
 
 Legal mumbo jumbo:
 
- Copyright (c) 1997-1998 Dominique Dumont. All rights reserved.
+ Copyright (c) 1997-1999 Dominique Dumont. All rights reserved.
  This program is free software; you can redistribute it and/or
  modify it under the same terms as Perl itself.
 

@@ -31,8 +31,9 @@ sub new
                  'key2' => {
                             'sub key1' => 'sv1',
                             'sub key2' => 'sv2'
-                           }
-               } ;
+                           },
+                 'long' => 'very long line'.'.' x 80 
+             } ;
     bless $self,$type;
   }
 
@@ -56,7 +57,8 @@ my $dummy = new toto ;
 print "ok ",$idx++,"\n";
 
 print "Creating obj scanner\n" if $trace ;
-$mw -> ObjScanner('caller' => $dummy) -> pack(expand => 1, fill => 'both') ;
+$mw -> ObjScanner('caller' => $dummy, title => 'test scanner')
+  -> pack(expand => 1, fill => 'both') ;
 
 print "ok ",$idx++,"\n";
 
