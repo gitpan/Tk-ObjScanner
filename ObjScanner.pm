@@ -1,6 +1,7 @@
 package Tk::ObjScanner;
 
 use strict;
+use warnings FATAL => qw(all);
 use vars qw($VERSION @ISA $errno);
 
 # Version 1.1805 - patches proposed by Rudi Farkas rudif@lecroy.com
@@ -21,7 +22,7 @@ use vars qw($VERSION @ISA $errno);
 # Purpose #2: add 'open folder' image and display it when item has displayed children
 # The patch consists of 
 # - a line in sub Populate
-#    $cw->{openImg} = $cw->Bitmap(-file => Tk->findINC('open_folder.xbm'));
+#    $cw->{openImg} = $cw->Photo(-file => Tk->findINC('open_folder.xbm'));
 # - method _redisplayImage()
 # - 2 calls to _redisplayImage inside displaySubItem()
 
@@ -34,14 +35,34 @@ use vars qw($VERSION @ISA $errno);
 # - method _swapCursor()
 # - 3 calls to _swapCursor inside displaySubItem(), at entry and at 2 exits
 
+# Implementation note:
+#
+# The scanner deals with a tree representation of the user data. The
+# scanner used to keep a copy of the data in its data tree that is
+# embedded in the HList widget. Unfortunately this scheme fails when
+# dealing with tied scalar: the copy stored within the HList is a copy
+# of the value of the scalar. The tied object itself is lost. 
+
+# So to be able to use ObjScanner with tied scalar, one big change was
+# necessary: The HList data must not hold a copy of the data, but just
+# reference to the data. Hence it will hold a scalar ref, a ref to a
+# hash ref or a ref to an array ref. Hence the item attribute of the
+# itemcget data part of Hlist is changed to item_ref.
+
+# Furthermore to avoid memroy leak if the user modifies its data
+# structure, the ref kept must be weakened (See WeakRef man page)
+
+
 use Carp ;
+use warnings ;
 use Tk::Derived ;
 use Tk::Frame;
+use Data::Dumper;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -54,10 +75,17 @@ sub Populate
     require Tk::ROText ;
     require Tk::Adjuster ;
 
-    $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
+    $cw->{show_menu} = 
+      defined $args->{'show_menu'} ? delete $args->{'show_menu'} :
+        defined $args->{'-show_menu'} ? delete $args->{'-show_menu'} : 0 ;
+
+    my $scanned_data = delete $args->{'caller'} || delete $args->{'-caller'};
+    $cw->{chief} = \$scanned_data ;
 
     my $destroyable = defined $args->{'destroyable'} ? 
       delete $args->{'destroyable'} : 1 ;
+
+    my $view_pseudo = delete $args->{'view_pseudo'} || 0;
 
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
@@ -72,53 +100,74 @@ sub Populate
 
     $cw->{itemImg} = delete $args->{'itemImage'} 
       || delete $args->{'-itemImage'} 
-        || $cw->Bitmap(-file => Tk->findINC('file.xbm'));
+        || $cw->Photo(-file => Tk->findINC('textfile.xpm'));
     $cw->{foldImg} = delete $args->{'foldImage'} 
       || delete $args->{'-foldImage'} 
-        || $cw->Bitmap(-file => Tk->findINC('folder.xbm'));
+        || $cw->Photo(-file => Tk->findINC('folder.xpm'));
     $cw->{openImg} = delete $args->{'openImage'} 
       || delete $args->{'-openImage'} 
-        || $cw->Bitmap(-file => Tk->findINC('openfolder.xbm'));
+        || $cw->Photo(-file => Tk->findINC('openfolder.xpm'));
 
-    my $menuframe = $cw ->
-      Frame (-relief => 'raised', -borderwidth => 1)-> 
-        pack(pady => 2,  fill => 'x' ) ;
+    my $menuframe;
+    my $menu ;
+    if ($cw->{show_menu})
+      {
+        $menuframe = $cw ->
+          Frame (-relief => 'raised', -borderwidth => 1)-> 
+            pack(pady => 2,  fill => 'x' ) ;
 
-    my $menu = $cw->{menu}= $menuframe -> Menubutton 
-      (-text => $title.' menu') 
-          -> pack ( fill => 'x' , side => 'left');
+        $menu = $cw->{menu} = $menuframe -> Menubutton 
+          (-text => $title.' menu') 
+            -> pack ( fill => 'x' , side => 'left');
 
-    $menu -> command (-label => 'reload',
-                      command => sub{$cw->updateListBox; });
+        $menu -> command (-label => 'reload',
+                          command => sub{$cw->updateListBox; });
+      }
+
+    my %hlist_args ;
+    map {$hlist_args{$_} = delete $args->{$_} if defined $args->{$_};}
+      qw/-columns -header/;
 
     my $hlist=  $cw -> Scrolled
       (
        qw\HList -selectmode single -indent 35 -separator |
-       -itemtype imagetext -wideselection 0 \,
+       -itemtype imagetext -wideselection 0 \, %hlist_args
       )-> pack ( qw/fill both expand 1 /) ;
 
-    $hlist -> configure
-      (
-       -command => sub 
-       {
-         my $name = shift ;
-         my $item = $hlist->info('data', $name); 
-         #print "Double click $name, ref is", ref($item) ,".\n";
-         $cw->displaySubItem($name,$item)
-       }
-      );
+    # See Mastering Perl/Tk page 364 for details
+    $hlist->bind('<Double-B1-ButtonRelease>' => 
+                 sub 
+                 {
+                   my $y = $Tk::event->y ;
+                   my $name = $Tk::widget->nearest($y) ;
+                   $cw->displaySubItem($name,0) ;
+                 } );
+
+    $hlist->bind('<Double-B2-ButtonRelease>' => 
+                 sub 
+                 {
+                   my $y = $Tk::event->y ;
+                   my $name = $Tk::widget->nearest($y) ;
+                   $cw->displaySubItem($name,1) ;
+                 } );
 
     $cw->Advertise(hlist => $hlist);
-    
-    my $adj1 = $cw->Adjuster()->packAfter($hlist);
 
-    my $window = $cw->{dumpWindow} = 
-      $cw -> Scrolled('ROText', height => 10)
-        -> pack( -fill => 'both', -expand => 1) ;
+    #my $adj1 = $cw->Adjuster()->packAfter($hlist);
+
+    my $popup = $cw->{popup} = $cw -> Toplevel ;
+    $popup -> withdraw ;
+    $cw->{dumpLabel} = $popup -> Label(-text => 'not yet ...') ;
+    $cw->{dumpLabel} ->pack(-fill => 'x') ;
+    $cw->{dumpWindow} = $popup -> Scrolled('ROText', height => 10) ;
+    $cw->{dumpWindow} -> pack( -fill => 'both', -expand => 1) ;
+    $popup->Button(-text => 'OK',
+                   -command => sub{$popup ->withdraw();}) -> pack ;
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
-                      command => sub{$cw->destroy; }) if $destroyable ;
+                      command => sub{$cw->destroy; }) 
+      if defined $cw->{menu} && $destroyable ;
 
     $cw->ConfigSpecs
       (
@@ -136,7 +185,7 @@ sub Populate
 
     $cw->SUPER::Populate($args) ;
 
-    $cw->{viewpseudohash} =1;
+    $cw->{viewpseudohash} = $view_pseudo;
 
     $menuframe -> Checkbutton 
       (
@@ -145,7 +194,7 @@ sub Populate
        -onvalue => 1, 
        -offvalue => 0,
        -command => sub{$cw->updateListBox;}
-      ) -> pack(side => 'right');
+      ) -> pack(side => 'right') if defined $menuframe ;
 
     $cw->updateListBox;
 
@@ -156,7 +205,7 @@ sub isObject
   {
     my $ref = shift ; # not a method !
     return 0 unless $ref ;
-    return  
+    return
       scalar grep ($ref eq $_, qw/REF SCALAR CODE GLOB ARRAY HASH/) ? 0 : 1;
   }
 
@@ -172,6 +221,10 @@ sub isPseudoHash
                      isa($item,'ARRAY')     &&
                      scalar @$item          &&
                      ref $item->[0] eq 'HASH');
+    my @indexes = values %{ $item->[0] } ;
+
+    return 0 if scalar grep( /\D/, @indexes ) or 
+      scalar grep( $_ > $#$item,@indexes  ) ;
 
     my $ret = scalar keys %{ $item->[0] } ;
     return 0 unless $ret >= scalar @$item - 1;
@@ -193,7 +246,6 @@ sub updateListBox
     if ($h->infoExists($root))
       {
         #print "deleting root children\n";
-        $cw->{dumpWindow}->delete('1.0','end');
         $h->deleteOffsprings($root);
 
         # set new text of root
@@ -204,164 +256,272 @@ sub updateListBox
         $h->add
           (
            $root,
-           -text => "ROOT:".$cw->element($cw->{chief}),
+           -data => { tied_display => 0, item_ref => $cw->{chief} }
+          );
+        $h->itemCreate
+          ( 
+           $root, 0,
            -image => $cw->{foldImg},
-           -data => $cw->{chief} 
-          ) 
+           -text => "ROOT:".$cw->element($cw->{chief})
+          );
       }
 
-    $cw->displaySubItem($root,$cw->{chief});
+    $cw->displaySubItem($root,0);
   }
 
 sub displaySubItem
   {
     my $cw = shift ;
     my $name = shift ;
-    my $item = shift ;
+    my $do_tie = shift || 0 ;
+
     my $h = $cw->Subwidget('hlist');
+    $h->selectionClear() ;
+    $h->selectionSet($name) ;
 
-    $cw->{dumpWindow}->delete('1.0','end');
+    ###
+    my $hash = $h->info('data', $name);
+    my $tied_display = $hash->{tied_display} ;
+    my $ref = $hash->{item_ref} ;
+    #print "pressed ",$Tk::event->b,',',
+    #  $Tk::event->x,' ',$y," for $Tk::widget\n";
+    
+    # test for tied_display objects
+    my $tied_object ;
+    if    (isa($$ref,'ARRAY')) {$tied_object = tied @$$ref ;}
+    elsif (isa($$ref, 'HASH')) {$tied_object = tied %$$ref ;}
+    elsif (isa($$ref, 'REF'))  {$tied_object = tied $$$ref ;}
+    else                       {$tied_object = tied  $$ref ;}
 
-    my @children = $h->infoChildren($name) ;
+    my $is_tied =  $do_tie && defined $tied_object ? 1 : 0 ;
+    my $delete = $is_tied ^ $tied_display ;
 
-    foreach my $child ( @children ) 
+    #print "Button clicked for $name (do_tie $do_tie, item $$ref, ",
+    #  "tied object $tied_object)\n";
+
+    if ($delete)
+      {
+        $hash->{tied_display}  = $is_tied;
+        $h->deleteOffsprings($name) ;
+      }
+
+    $cw->toggle_display($name) ;
+
+    # return if the children are already represented in the hlist
+    return if scalar($h->infoChildren($name)) ;
+
+    my $ref_to_display = $is_tied ? \$tied_object : $ref ;
+
+    $cw->_swapCursor('watch');
+    $cw->displayObject($name,$ref_to_display) ;
+    $cw->_swapCursor();
+    $cw->_redisplayImage($name);
+  }
+
+sub toggle_display
+  {
+    my $cw = shift ;
+    my $name = shift ;
+
+    my $h = $cw->Subwidget('hlist');
+    foreach my $child ( $h->infoChildren($name) ) 
       {
         if ($h->info('hidden',$child)) {$h->show('entry',$child);}
         else {$h->hide('entry',$child);}
       }
     $cw->_redisplayImage($name);
-    return if scalar(@children) > 0;
+  }
 
-    $cw->_swapCursor('watch');
+sub displayObject
+  {
+    my $cw = shift ;
+    my $name = shift ;
+    my $ref = shift ;
 
-    my $ref = ref($item) ;
-    my $isObject = isObject($ref) ;
+    my $h = $cw->Subwidget('hlist');
+    my $isObject = isObject($$ref) ;
+    my $isPseudoHash = $cw->isPseudoHash($$ref);
 
-    my $isPseudoHash = $cw->isPseudoHash($item);
-
-    #print "ref is $ref\n";
-    if (not defined $item)
+    if (isa($$ref,'ARRAY') and not $isPseudoHash)
       {
-        #print "adding scalar $name , $item is a scalar\n";
-        $cw->{dumpWindow}->delete('1.0','end');
-        $cw->{dumpWindow}->insert('end',"undefined value\n");
-      }
-    elsif (isa($item,'ARRAY') and not $isPseudoHash)
-      {
-        my $i;
-        foreach (@$item)
+        foreach my $i (0 .. $#$$ref)
           {
             #print "adding array item $i: $_,",ref($_),"\n";
-            my $img = ref($_) ? $cw->{foldImg} : $cw->{itemImg} ;
-            $h->addchild($name,
-                         -image => $img,
-                         -text => '['.$i++."]-> ".$cw->element($_), 
-                         -data => $_);
+            my $img = $$ref->[$i] ? $cw->{foldImg} : $cw->{itemImg} ;
+            my $npath = $h->addchild
+              (
+               $name,
+               -data => { tied_display => 0, index => $i , item_ref => \$$ref->[$i] }
+              );
+            $h->itemCreate($npath, 0,
+                           -image => $img,
+                           -text => $cw->describe_element($ref,$i)
+                          );
           }
       }
-    elsif (isa($item,'REF'))
+    elsif (isa($$ref,'REF') or isa($$ref,'SCALAR'))
       {
-        $h->addchild($name,
-                     -image => $cw->{foldImg},
-                     -text => $cw->element($$item), 
-                     -data => $$item);
+        my $npath = $h->addchild($name,
+                                 -data => { tied_display => 0,
+                                            item_ref => $$ref});
+        $h->itemCreate($npath, 0,
+                       -image => isa($$ref,'REF') ? $cw->{foldImg} : $cw->{itemImg},
+                       -text => $cw->describe_element($ref)
+                      );
       }
-    elsif (isa($item,'SCALAR'))
+    elsif (isa($$ref,'CODE'))
       {
-        $h->addchild($name,
-                     -image => $cw->{itemImg},
-                     -text => $cw->element($$item), 
-                     -data => $$item);
+        require B::Deparse;
+        my $deparse = B::Deparse->new("-p", "-sC");
+        my $body = $deparse->coderef2text($$ref);
+        $cw->popup_text("B::Deparse code dump",$body) ;
       }
-    elsif (isa($item,'CODE') or isa($item,'GLOB'))
+    elsif (isa($$ref,'GLOB'))
       {
-        if (isa($item, 'UNIVERSAL'))
+        if (isa($$ref, 'UNIVERSAL'))
           {
-            my ($what) = ($item =~ /\b([A-Z]+)\b/);
-            $cw->{dumpWindow}-> insert
-              ('end', "Sorry, can't display a $what based $ref object");
+            my ($what) = ($$ref =~ /\b([A-Z]+)\b/);
+            $cw->popup_text('Error',
+                            "Sorry, can't display a $what based $$ref object");
            }
         else
           {
-            $cw->{dumpWindow}->
-              insert('end',"Sorry, can't display ".$ref." reference");
+            $cw->popup_text('Error',
+                            "Sorry, can't display ".$$ref." reference");
           }
       }
-    elsif (isa($item, 'HASH') or $isPseudoHash)
+    elsif (isa($$ref, 'HASH') or $isPseudoHash)
       {
         # hash or object
-
-        foreach (sort keys %$item)
+        foreach my $k (sort keys %$$ref)
           {
-            #print "adding hash key $name|$_ ", ref($item->{$_}),"\n";
+            #print "adding hash key $name|$k ", ref($$ref->{$k}),"\n";
 
-            my $img = ref($item->{$_}) ? $cw->{foldImg} : $cw->{itemImg} ;
-            $h->addchild($name, 
-                    -text => "{$_}-> ".$cw->element($item->{$_}),
-                    -image => $img,
-                    -data => $item->{$_});        
+            my $img = ref($$ref->{$k}) ? $cw->{foldImg} : $cw->{itemImg} ;
+            my $npath = $h->addchild($name, 
+                                     -data => { tied_display => 0, index => $k,
+                                                item_ref => \$$ref->{$k}});
+            $h->itemCreate($npath, 0,
+                           -text => $cw->describe_element($ref,$k),
+                           -image => $img);
           }
       }
-    elsif (defined $item)
+    elsif (defined $$ref)
       {
-        #print "adding scalar $name , $item is a scalar\n";
-        $cw->{dumpWindow}->insert('end',$item);
+        #print "adding scalar $name , $$ref is a scalar\n";
+        $cw->popup_text('scalar dump',$$ref) if $$ref =~ /\n/;
       }
-    $cw->_swapCursor();
-    $cw->_redisplayImage($name);
+  }
+
+sub describe_element
+  {
+    my ($cw,$ref,$index) = @_ ;
+    my $isPseudoHash = $cw->isPseudoHash($$ref);
+
+    if (isa($$ref,'ARRAY') and not $isPseudoHash)
+      {
+        return "[$index]-> ".$cw->element(\$$ref->[$index] ) ;
+      }
+    elsif (isa($$ref,'REF') or isa($$ref,'SCALAR'))
+      {
+        return $cw->element($$ref) ;
+      }
+    elsif (isa($$ref, 'HASH') or $isPseudoHash)
+      {
+        return ("{$index}-> ".$cw->element(\$$ref->{$index})) ;
+      }
+    else
+      {
+        die "describe_element: unexpected type $$ref, index $index";
+      }
+  }
+
+sub popup_text
+  {
+    my ($cw,$title,$text) = @_ ;
+    $cw->{popup} -> title ($title) ;
+    $cw->{dumpLabel} -> configure (-text => $title );
+    $cw->{dumpWindow}->delete('1.0','end');
+    $cw->{dumpWindow}-> insert ('end', $text);
+    $cw->{popup} -> deiconify ;
+    $cw->{popup} -> raise ;
+  }
+
+sub analyse_element
+  {
+    my $cw = shift ;
+    my $ref = shift;
+
+    my %info = ( description => '' );
+    confess "ref error" unless ref($ref) ;
+
+    my $pseudo = $info{pseudo_hash} = $cw->isPseudoHash($$ref) ;
+    $info{element_ref} = $ref ;
+
+    my $str_ref = ref($$ref) ;
+    $info{tied} = $str_ref eq 'HASH' ? tied %$$ref :
+      $str_ref eq 'ARRAY' ? tied @$$ref :
+        $str_ref eq 'SCALAR' ? tied $$$ref :
+          $str_ref eq 'REF' ? tied $$$ref :
+            $str_ref ? undef : tied $$ref  ;
+
+    if (not defined $$ref)
+      {
+        $info{description} =  'undefined' ;
+      }
+    elsif ($str_ref and isa($$ref,'UNIVERSAL'))
+      {
+        $info{class} = $str_ref ;
+        $info{base} = 
+          $pseudo ? 'PSEUDO-HASH' :
+            isa($$ref,'SCALAR') ? 'SCALAR' :
+              ($$ref =~ /=([A-Z]+)\(/) ? $1 :
+                "some magic with $$ref" ;  # desperate measure
+
+        $info{description} = "$str_ref OBJECT based on $info{base}";
+      }
+    elsif ($pseudo)
+      {
+        $info{description} = 'PSEUDO-HASH';
+      }
+    elsif ($str_ref)
+      {
+        # a ref but not an object
+        $info{description} = $str_ref ;
+      }
+    elsif ($$ref =~ /\n/)
+      {
+        # multi-line string
+        $info{description} =  'double click here to display value';
+      }
+    else
+      {
+        # plain scalar
+        $info{value} = $$ref;
+      }
+
+    if (defined $$ref)
+      {
+        $info{nb} = $pseudo ? $pseudo :
+          isa($$ref,'ARRAY') ? scalar (@$$ref) :
+            isa($$ref,'HASH') ? scalar keys(%$$ref) : undef ;
+      }
+
+    return \%info ;
   }
 
 sub element
   {
     my $cw = shift ;
-    my $elt = shift;
+    my $ref = shift;
 
-    my ($what,$nb);
-    my $pseudo = $cw->isPseudoHash($elt) ;
+    my $info = $cw->analyse_element($ref);
 
-    my $ref = ref($elt) ;
-
-    if (not defined $elt)
-      {
-        $what =  'undefined';
-      }
-    elsif ($ref and isa($elt,'UNIVERSAL'))
-      {
-        my $base ;
-        if ($pseudo) {$base = 'PSEUDO-HASH';} 
-        elsif (isa($elt,'SCALAR')) {$base = 'SCALAR'}
-        elsif ($elt =~ /=([A-Z]+)\(/) {$base = $1 ;}
-        else {$base = "some magic with $elt" ;}  # desperate measure
-        $what = "$ref OBJECT based on $base";
-      }
-    elsif ($pseudo)
-      {
-        $what = 'PSEUDO-HASH';
-      }
-    elsif ($ref)
-      {
-        # a ref but not an object
-        $what = $ref ;
-      }
-    elsif ($elt =~ /\n/)
-      {
-        # multi-line string
-        $what =  'double click here to display value';
-      }
-    else
-      {
-        # plain scalar
-        $what =  "'$elt'" ;        
-      }
-    
-    if (defined $elt)
-      {
-        if ($pseudo)              {$nb = $pseudo;}
-        elsif (isa($elt,'ARRAY')) {$nb = scalar @$elt}
-        elsif (isa($elt,'HASH'))  {$nb = scalar keys(%$elt)}
-      }
-
+    my $what = $info->{description} || "'$info->{value}'" ;
+    my $nb = $info -> {nb} ;
+    my $tied = $info -> {tied} ;
     $what .= " ($nb)" if defined $nb;
+    $what .= " (tied with ".ref($tied).")" if defined $tied ;
     return $what ;
   }
 
@@ -399,19 +559,19 @@ Tk::ObjScanner - Tk data scanner
 =head1 SYNOPSIS
 
   use Tk::ObjScanner;
-  
+
   my $scanner = $mw->ObjScanner( caller => $object, 
                                  title=>"windows") -> pack ;
-                                 
+
   my $mw -> ObjScanner
   (
-   caller 		    => $object,
-   title 		    => 'demo setting the scanner options',
+   caller 	    => $object,
+   title 	    => 'demo setting the scanner options',
    background 	    => 'white',
    selectbackground => 'beige',
-   foldImage 		=> $mw->Photo(-file => Tk->findINC('folder.xpm')),
-   openImage 		=> $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
-   itemImage 		=> $mw->Photo(-file => Tk->findINC('textfile.xpm')),
+   foldImage 	    => $mw->Photo(-file => Tk->findINC('folder.xpm')),
+   openImage 	    => $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
+   itemImage 	    => $mw->Photo(-file => Tk->findINC('textfile.xpm')),
   )
   -> pack(expand => 1, fill => 'both') ;
 
@@ -420,55 +580,67 @@ Tk::ObjScanner - Tk data scanner
 The scanner provides a GUI to scan the attributes of an object. It can
 also be used to scan the elements of a hash or an array.
 
-The scanner is a composite widget made of a L<Tk::HList> and a text
-window (actually a L<TK::ROText>). This widget acts as a scanner to
-the object (or hash ref) passed with the 'caller' parameter. The
-scanner will retrieve all keys of the hash/object and insert them in
-the HList.
+The scanner is a composite widget made of a menubar and L<Tk::HList>.
+This widget acts as a scanner to the object (or hash ref) passed with
+the 'caller' parameter. The scanner will retrieve all keys of the
+hash/object and insert them in the HList.
 
 When the user double clicks on a key, the corresponding value will be added
 in the HList.
 
-If the value is a scalar, the scalar will be displayed in the text window.
-(Which is handy if the value is a multi-line string)
+If the value is a multi-line scalar, the scalar will be displayed in a
+popup text window. Code ref will be deparsed and shown also in the
+pop-up window.
+
+Tied scalar, hash or array internal can also be scanned by clicking on
+the I<middle> button to open them.
 
 =head1 Constructor parameters
 
 =over 4
 
-=item *
+=item caller
 
-caller: The ref of the object or hash or array to scan (mandatory).
+The ref of the object or hash or array to scan (mandatory).
 
-=item *
+=item title
 
-title: the title of the menu created by the scanner (optional)
+The title of the menu created by the scanner (optional)
 
-=item *
+=item background
 
-destroyable: If set, a menu entry will allow the user to destroy the scanner
-widget. (optional, default 1) . You may want to set this parameter to 0 if
-the destroy can be managed by a higher level object.
+The background color for subwidgets (optional)
 
-=item *
+=item selectbackground
 
-background: the background color for subwidgets (optional)
+The select background color for HList (optional)
 
-=item *
+=item itemImage
 
-selectbackground: the select background color for HList (optional)
+The image for a scalar item (optional, default 'file.xbm')
 
-=item *
+=item foldImage
 
-itemImage: the image for a scalar item (optional, default 'file.xbm')
+The image for a composite item (array or hash) when closed
+(optional, default 'folder.xbm')
 
-=item *
+=item openImage
 
-foldImage: the image for a composite item (array or hash) when closed (optional, default 'folder.xbm')
+The image for a composite item (array or hash) when open
+(optional, default 'openfolder.xbm')
 
-=item *
+=item show_menu
 
-openImage: the image for a composite item (array or hash) when open (optional, default 'openfolder.xbm')
+ObjScanner can feature a menu with 'reload' button, 'view
+pseudo-hash' check box. (optional default 0).
+
+=item destroyable
+
+If set, a menu entry will allow the user to destroy the scanner
+widget. (optional, default 1) . You may want to set this parameter to
+0 if the destroy can be managed by a higher level object. This
+parameter is ignored if show_menu is unset.
+
 
 =back
 
@@ -477,7 +649,7 @@ openImage: the image for a composite item (array or hash) when open (optional, d
 =head2 updateListBox
 
 Update the keys of the listbox. This method may be handy if the
-scanned object wants to update the listbox of the scanner 
+scanned object wants to update the listbox of the scanner
 when the scanned object gets new attributes.
 
 =head1 CAVEATS
@@ -499,23 +671,40 @@ display the content of the reference like a hash. If the reference is
 should not be displayed like a pseudo-hash, you can turn off the
 pseudo-hash view with the check button on the top right of the widget.
 
+The icon used for tied scalar changes from scalar icon to folder icon
+when opening the object hidden behind the tied scalar (using the
+middle button). I sure could use a better icon for tied items. (hint
+hint)
+
 =head1 THANKS
 
 To Rudi Farkas for all the improvements provided to ObjScanner.
 
-To Slaven Rezic for the propotype code of the pseudo-hash viewer.
+To Slaven Rezic for:
+
+=over
+
+=item *
+
+The propotype code of the pseudo-hash viewer.
+
+=item *
+
+The idea to use B::Deparse to view code ref.
+
+=back
 
 =head1 AUTHOR
 
-Dominique Dumont, Dominique_Dumont@grenoble.hp.com
+Dominique Dumont, Dominique_Dumont@hp.com
 
-Copyright (c) 1997-2001 Dominique Dumont. All rights reserved.
+Copyright (c) 1997-2003 Dominique Dumont. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-perl(1), Tk(3), Tk::HList(3)
+L<perl>, L<Tk>, L<Tk::HList>, L<B::Deparse>
 
 =cut
 

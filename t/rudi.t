@@ -1,4 +1,5 @@
 #! perl
+use warnings FATAL => qw(all);
 ###
 ### variant of test.pl for Tk:ObjScanner, with additional test cases
 ### by R Farkas rudif@lecroy.com 27 Jun 1999
@@ -113,8 +114,7 @@ sub scan
 
     foreach my $c ($s->infoChildren($topName))
       {
-        my $item = $s->info('data', $c);
-        $s->displaySubItem($c,$item);
+        $s->displaySubItem($c);
         scan($c);
       }
     $mw->idletasks;

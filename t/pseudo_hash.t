@@ -1,4 +1,5 @@
 # Before `make install' is performed this script should be runnable with
+use warnings FATAL => qw(all);
 # `make test'. After `make install' it should work as `perl test.pl'
 
 ######################### We start with some black magic to print on failure.
@@ -60,7 +61,7 @@ $b2->{a} = "a2";
 $b2->{b} = "b23";
 
 
-my $s = $top->ObjScanner(caller => $o);
+my $s = $top->ObjScanner(caller => $o , view_pseudo => 1);
 $s->pack;
 
 print "ok ",$idx++,"\n";
@@ -75,8 +76,7 @@ sub scan
 
     foreach my $c ($s->infoChildren($topName))
       {
-        my $item = $s->info('data', $c);
-        $s->displaySubItem($c,$item);
+        $s->displaySubItem($c);
         scan($c);
       }
     $top->idletasks;

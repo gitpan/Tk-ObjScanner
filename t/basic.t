@@ -1,4 +1,5 @@
 # Before `make install' is performed this script should be runnable with
+use warnings FATAL => qw(all);
 # `make test'. After `make install' it should work as `perl test.pl'
 
 ######################### We start with some black magic to print on failure.
@@ -9,9 +10,12 @@
 BEGIN { $| = 1; print "1..4\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Tk ;
-use ExtUtils::testlib ; 
+use ExtUtils::testlib ;
 use Tk::ObjScanner ;
+
 $loaded = 1;
+
+use strict ;
 my $idx = 1;
 print "ok ",$idx++,"\n";
 my $trace = shift || 0 ;
@@ -22,11 +26,63 @@ my $trace = shift || 0 ;
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+package myHash;
+use Tie::Hash ;
+use vars qw/@ISA/;
+
+@ISA=qw/Tie::StdHash/ ;
+
+sub TIEHASH {
+  my $class = shift; 
+  my %args = @_ ;
+  return bless { %args, dummy => 'foo' } , $class ;
+}
+
+
+sub STORE 
+  { 
+    my ($self, $idx, $value) = @_ ; 
+    $self->{$idx}=$value;
+    return $value;
+  }
+
+package MyScalar;
+use Tie::Scalar ;
+use vars qw/@ISA/;
+
+@ISA=qw/Tie::StdHash/ ;
+
+sub TIESCALAR {
+  my $class = shift; 
+  my %args = @_ ;
+  return bless { %args, dummy => 'foo default value' } , $class ;
+}
+
+
+sub STORE 
+  { 
+    my ($self, $value) = @_ ; 
+    $self->{data} = $value;
+    return $value;
+  }
+
+sub FETCH
+  {
+    my ($self) = @_ ; 
+    # print "\t\t",'@.....@.....@..... MeScalar read',"\n";
+    return $self->{data} || $self->{dummy} ;
+  }
+
 package Toto ;
 
 sub new
   {
     my $type = shift ;
+
+    my %h ;
+    tie (%h, 'myHash', 'dummy key' => 'dummy value') or die ;
+    $h{data1}='value1';
+
 
     # add recursive data only if interactive test
     my $tkstuff = $trace ? shift : "may be another time ..." ;
@@ -51,16 +107,21 @@ sub new
        'long' => 'very long line'.'.' x 80 ,
        'is undef' => undef,
        'some text' => "some \n dummy\n Text\n",
+       'tied hash' => \%h ,
        'tk widget' => $tkstuff
       };
     
+    tie ($self->{tied_scalar}, 'MyScalar', 'dummy key' => 'dummy value')
+      or die ;
+
+    $self->{tied_scalar} = 'some scalar huh?';
+
     bless $self,$type;
   }
 
 
 package main;
 
-use strict ;
 my $toto ;
 my $mw = MainWindow-> new ;
 $mw->geometry('+10+10');
@@ -78,12 +139,9 @@ my $dummy = new Toto ($mw);
 print "ok ",$idx++,"\n";
 
 print "Creating obj scanner\n" if $trace ;
-my $s = $mw -> ObjScanner
-  (
-   'caller' => $dummy, 
-   #destroyable => 0,
-   title => 'test scanner'
-  );
+my $s = $mw -> ObjScanner ('caller' => $dummy, -columns => 4, -header => 1 );
+
+$s->headerCreate(1,-text =>'coucou') ;
 
 $s -> pack(expand => 1, fill => 'both') ;
 
@@ -99,8 +157,7 @@ sub scan
 
     foreach my $c ($s->infoChildren($topName))
       {
-        my $item = $s->info('data', $c);
-        $s->displaySubItem($c,$item);
+        $s->displaySubItem($c);
         scan($c);
       }
     $mw->idletasks;

@@ -1,3 +1,18 @@
+2003-01-31  Dominique Dumont  <domi@komarr.grenoble.hp.com>
+
+	* ObjScanner.pm v2.1 : 
+	External changes:
+ 	- added view_pseudo parameter
+	- can view intern of tied scalar, hash or array by using middle-button
+	- text window is removed from scanner and is now displayed in popup
+	  window.
+	- can deparse code ref and display the deparsed code in popup window
+
+	Internal changes:
+	- changed internal data model. This will break classes derived from
+	  ObjScanner
+	- internal methods are re-organized for easier sub-classing
+
 2001-01-17  Dominique Dumont  <domi@komarr.grenoble.hp.com> v1.022
 
 	* ObjScanner.pm (isPseudoHash): small bug fix

@@ -5,19 +5,22 @@ Starting from version 1.020:
 - pseudo hashes are also correctly viewed.
 - a demo is installed so Tk's widget demo will feature ObjScanner
 
-The scanner is a composite widget made of a HList and a text window
-(actually a TK::ROText). This widget acts as a scanner to the
-object (or hash ref) passed with the 'caller' parameter. The scanner
-will retrieve all keys of the hash/object and insert them in the
-HList.
+The scanner is a composite widget made of a HList. This widget acts as
+a scanner to the object (or hash ref) passed with the 'caller'
+parameter. The scanner will retrieve all keys of the hash/object and
+insert them in the HList.
 
-When the user double clicks on a key, the corresponding value will be added
-in the HList.
+When the user double clicks on a key, the corresponding value will be
+added in the HList. If the user use the middle button to open a tied
+item, the internals of the tied object will be displayed.
 
-If the value is a scalar, the scalar will be displayed in the text window.
-(Which is handy if the value is a multi-line string)
+If the value is a scalar, the scalar will be displayed in a popup text
+window.
 
-This module was written with perl5.6.0 and Tk 800.022
+If the value is a code ref, the deparsed code will be displayed in a
+popup text window.
+
+This module was written with perl5.8.0 and Tk 800.024
 
 See the embedded documentation in the module for more details.
 
@@ -37,12 +40,12 @@ Thanks to Slavec Rezic for the pseudo-hash prototype.
 
 Legal mumbo jumbo:
 
- Copyright (c) 1997-2001 Dominique Dumont. All rights reserved.
+ Copyright (c) 1997-2003 Dominique Dumont. All rights reserved.
  This program is free software; you can redistribute it and/or
  modify it under the same terms as Perl itself.
 
  - Dominique Dumont
-   dominique_dumont@grenoble.hp.com
+   dominique_dumont@hp.com
 
 ---------------------------------------------------------------------
 INSTALLATION
