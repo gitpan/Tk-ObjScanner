@@ -1,4 +1,4 @@
-# 	$Id: ObjScanner.pm,v 2.9 2004/07/28 10:49:54 domi Exp $	
+# 	$Id: ObjScanner.pm,v 2.10 2004/07/30 11:57:35 domi Exp $	
 
 package Tk::ObjScanner;
 
@@ -64,7 +64,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.9 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.10 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -126,6 +126,13 @@ sub Populate
       defined $args->{'show_menu'} ? delete $args->{'show_menu'} :
         defined $args->{'-show_menu'} ? delete $args->{'-show_menu'} : 0 ;
 
+    my $display_show_tied_button = defined $args->{'-show_tied'} ||
+      defined $args->{show_tied} ? 0 : 1 ;
+
+    $cw->{show_tied} = 
+      defined $args->{'-show_tied'} ? delete $args->{'-show_tied'} :
+      defined $args->{show_tied} ? delete $args->{show_tied} : 1 ;
+
     my $scanned_data = delete $args->{'caller'} || delete $args->{'-caller'};
     $cw->{chief} = \$scanned_data ;
 
@@ -133,7 +140,10 @@ sub Populate
       defined $args->{'-destroyable'} ? delete $args->{'-destroyable'} : 
 	defined $args->{'destroyable'} ? delete $args->{'destroyable'} : 1 ;
 
-    my $view_pseudo = delete $args->{'-view_pseudo'} || 
+    my $display_view_pseudo_button = defined $args->{'-view_pseudo'} ||
+      defined $args->{view_pseudo} ? 0 : 1;
+
+   my $view_pseudo = delete $args->{'-view_pseudo'} || 
       delete $args->{'view_pseudo'} || 0;
 
     croak "Missing caller argument in ObjScanner\n" 
@@ -198,7 +208,7 @@ sub Populate
                    my $y = $Tk::event->y ;
                    my $name = $Tk::widget->nearest($y) ;
                    $cw->displaySubItem($name,1) ;
-                 } );
+                 } ) if $cw->{show_tied};
 
     $cw->Advertise(hlist => $hlist);
 
@@ -236,14 +246,26 @@ sub Populate
 
     $cw->{viewpseudohash} = $view_pseudo;
 
-    $menuframe -> Checkbutton 
-      (
-       -text => 'view pseudo-hashes',
-       -variable => \$cw->{viewpseudohash},
-       -onvalue => 1, 
-       -offvalue => 0,
-       -command => sub{$cw->updateListBox;}
-      ) -> pack(-side => 'right') if defined $menuframe ;
+    if (defined $menuframe)
+      {
+	$menuframe -> Checkbutton 
+	  (
+	   -text => 'view pseudo-hashes',
+	   -variable => \$cw->{viewpseudohash},
+	   -onvalue => 1, 
+	   -offvalue => 0,
+	   -command => sub{$cw->updateListBox;}
+	  ) -> pack(-side => 'right') if $display_view_pseudo_button ;
+
+	$menuframe -> Checkbutton 
+	  (
+	   -text => 'show tied info',
+	   -variable => \$cw->{show_tied},
+	   -onvalue => 1, 
+	   -offvalue => 0,
+	   -command => sub{$cw->updateListBox;}
+	  ) -> pack(-side => 'right') if $display_show_tied_button;
+      }
 
     $cw->updateListBox;
 
@@ -288,7 +310,7 @@ sub updateListBox
         $h->deleteOffsprings($root);
 
         # set new text of root
-        $h->entryconfigure($root,-text => "ROOT:".$cw->element($cw->{chief}));
+        $h->entryconfigure($root,-text => $cw->element($cw->{chief}));
       }
     else
       {
@@ -301,7 +323,7 @@ sub updateListBox
           ( 
            $root, 0,
            -image => $cw->{foldImg},
-           -text => "ROOT:".$cw->element($cw->{chief})
+           -text => $cw->element($cw->{chief})
           );
       }
 
@@ -313,6 +335,8 @@ sub displaySubItem
     my $cw = shift ;
     my $name = shift ;
     my $do_tie = shift || 0 ;
+
+    $do_tie = 0 unless $cw->{show_tied} ;
 
     my $h = $cw->Subwidget('hlist');
     $h->selectionClear() ;
@@ -564,7 +588,8 @@ sub element
     my $nb = $info -> {nb} ;
     my $tied = $info -> {tied} ;
     $what .= " ($nb)" if defined $nb;
-    $what .= " (tied with ".ref($tied).")" if defined $tied ;
+    $what .= " (tied with ".ref($tied).")" if defined $tied 
+      and $cw->{show_tied};
     return $what ;
   }
 
@@ -702,8 +727,8 @@ The image for a composite item (array or hash) when open
 
 =item C<-show_menu>
 
-ObjScanner can feature a menu with 'reload' button, 'view
-pseudo-hash' check box. (optional default 0).
+ObjScanner can feature a menu with 'reload' button, 'show tied info',
+'view pseudo-hash' check box. (optional default 0).
 
 =item C<-destroyable>
 
@@ -712,6 +737,15 @@ widget. (optional, default 1) . You may want to set this parameter to
 0 if the destroy can be managed by a higher level object. This
 parameter is ignored if show_menu is unset.
 
+=item C<-view_pseudo>
+
+If set, will interpret pseudo hashes as hash (default 0)
+
+=item C<-show_tied>
+
+If set, will indicate if a variable is a tied variable. You can see
+the internal data of the tied variable by double clicking on the
+middle button. (default 1)
 
 =back
 
@@ -770,9 +804,9 @@ The idea to use B::Deparse to view code ref.
 
 =head1 AUTHOR
 
-Dominique Dumont, Dominique_Dumont@hp.com
+Dominique Dumont, dominique.dumont@hp.com
 
-Copyright (c) 1997-2003 Dominique Dumont. All rights reserved.
+Copyright (c) 1997-2004 Dominique Dumont. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

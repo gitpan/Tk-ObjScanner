@@ -1,12 +1,18 @@
-2004-07-28  author  <author@komarr.grenoble.hp.com>
+2004-07-30  domi  <domi@komarr.grenoble.hp.com> v2.010
+
+	* ObjScanner.pm:
+	Showing tied info can be disabled by option or menu (exclusive or)
+	Removed unnecessary 'ROOT:' word from top level label
+
+2004-07-28  domi  <domi@komarr.grenoble.hp.com> v2.009
 
 	* ObjScanner.pm v2.8: Applied patch from MAREKR@cpan.org (See
 	https://rt.cpan.org/Ticket/Display.html?id=5197) to better handle
 	pseudo hashes (even though pseudo hashes are still obsolete)
 
-2004-07-27  author  <author@komarr.grenoble.hp.com>
+2004-07-27  domi  <domi@komarr.grenoble.hp.com> v2.008
 
-	* ObjScanner.pm v2.7: Applied Slaven Rezic's patch which fixes
+	* ObjScanner.pm : Applied Slaven Rezic's patch which fixes
 	image associated to array elements. (See
 	https://rt.cpan.org/Ticket/Display.html?id=6831)
 
