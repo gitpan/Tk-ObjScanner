@@ -16,8 +16,11 @@ See the embedded documentation in the module for more details.
 
 Comments and suggestions are always welcome.
 
-Note that this module is in beta state. Its interface is not expected 
+Note that this module is in beta state. It's interface is not expected 
 to change anymore
+
+Many thanks to Achim Bohnet for all the tests, patches (and reports) he 
+made. Many improvements were made thanks to his efforts.
 
 Legal mumbo jumbo:
 

@@ -4,11 +4,11 @@ use ExtUtils::MakeMaker;
 WriteMakefile
   (
    'NAME'	=> 'Tk::ObjScanner',
-   'VERSION' => '0.1',
+   'VERSION_FROM' => 'ObjScanner.pm',
    'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
    'PREREQ_PM' =>
    {
     'Data::Dumper' => 0,
-    'Tk::Multi' => 0
+    'Tk::Multi::Text' => 0
    }
 );
