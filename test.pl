@@ -22,7 +22,7 @@ my $trace = shift || 0 ;
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
-package toto ;
+package Toto ;
 
 sub new
   {
@@ -64,7 +64,7 @@ my $f = $w_menu->Menubutton(-text => 'File', -underline => 0)
 $f->command(-label => 'Quit',  -command => sub{$mw->destroy;} );
 
 print "creating dummy object \n" if $trace ;
-my $dummy = new toto ($mw);
+my $dummy = new Toto ($mw);
 
 print "ok ",$idx++,"\n";
 
@@ -72,6 +72,7 @@ print "Creating obj scanner\n" if $trace ;
 $mw -> ObjScanner
   (
    'caller' => $dummy, 
+   #destroyable => 0,
    title => 'test scanner'
   )
   -> pack(expand => 1, fill => 'both') ;

@@ -8,8 +8,9 @@ use Tk::Derived ;
 use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
+*isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -22,6 +23,9 @@ sub Populate
     require Tk::ROText ;
     
     $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
+
+    my $destroyable = defined $args->{'destroyable'} ? 
+      delete $args->{'destroyable'} : 1 ;
 
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
@@ -63,7 +67,6 @@ sub Populate
     $cw->{idx}=0;
 
     $cw->Advertise(hlist => $hlist);
-    $cw->updateListBox;
 
 
     my $window = $cw->{dumpWindow} = 
@@ -72,7 +75,9 @@ sub Populate
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
-                      command => sub{$cw->destroy; });
+                      command => sub{$cw->destroy; }) if $destroyable ;
+
+    $cw->updateListBox;
 
     $cw->ConfigSpecs(
                      scrollbars=> [$hlist, undef, undef,'osoe'],
@@ -82,6 +87,14 @@ sub Populate
     $cw->Delegates(DEFAULT => $hlist ) ;
 
     $cw->SUPER::Populate($args) ;
+  }
+
+sub isObject
+  {
+    my $ref = shift ; # not a method !
+    return 0 unless $ref ;
+    return  
+      scalar grep ($ref eq $_, qw/REF SCALAR CODE GLOB ARRAY HASH/) ? 0 : 1;
   }
 
 sub updateListBox
@@ -117,6 +130,8 @@ sub displaySubItem
     my $item = shift ;
     my $h = $cw->Subwidget('hlist');
 
+    $cw->{dumpWindow}->delete('1.0','end');
+
     unless ($name eq 'root')
       {
         my @children = $h->infoChildren($name) ;
@@ -128,13 +143,17 @@ sub displaySubItem
           }
       }
 
+    my $ref = ref($item) ;
+    my $isObject = isObject($ref) ;
+
+    #print "ref is $ref\n";
     if (not defined $item)
       {
         #print "adding scalar $name , $item is a scalar\n";
         $cw->{dumpWindow}->delete('1.0','end');
         $cw->{dumpWindow}->insert('end',"undefined value\n");
       }
-    elsif (ref($item) eq 'ARRAY')
+    elsif (isa($item,'ARRAY'))
       {
         my $i;
         foreach (@$item)
@@ -147,27 +166,35 @@ sub displaySubItem
                          -data => $_);
           }
       }
-    elsif (ref($item) eq 'REF')
+    elsif (isa($item,'REF'))
       {
         $h->addchild($name,
                      -image => $cw->{foldImg},
                      -text => $cw->element($$item), 
                      -data => $$item);
       }
-    elsif (ref($item) eq 'SCALAR')
+    elsif (isa($item,'SCALAR'))
       {
         $h->addchild($name,
                      -image => $cw->{itemImg},
                      -text => $cw->element($$item), 
                      -data => $$item);
       }
-    elsif ( ref($item) eq 'CODE' or ref($item) eq 'GLOB')
+    elsif (isa($item,'CODE') or isa($item,'GLOB'))
       {
-        $cw->{dumpWindow}->delete('1.0','end');
-        $cw->{dumpWindow}->
-          insert('end',"Sorry, can't display ".ref($item)." reference");
+        if (isa($item, 'UNIVERSAL'))
+          {
+            my ($what) = ($item =~ /\b([A-Z]+)\b/);
+            $cw->{dumpWindow}-> insert
+              ('end', "Sorry, can't display a $what based $ref object");
+           }
+        else
+          {
+            $cw->{dumpWindow}->
+              insert('end',"Sorry, can't display ".$ref." reference");
+          }
       }
-    elsif (ref($item))
+    elsif (isa($item, 'HASH'))
       {
         # hash or object
 
@@ -185,7 +212,6 @@ sub displaySubItem
     elsif (defined $item)
       {
         #print "adding scalar $name , $item is a scalar\n";
-        $cw->{dumpWindow}->delete('1.0','end');
         $cw->{dumpWindow}->insert('end',$item);
       }
   }
@@ -195,36 +221,44 @@ sub element
     my $cw = shift ;
     my $elt = shift;
 
+    my ($what,$nb);
+    my $ref = ref($elt) ;
+
     if (not defined $elt)
       {
-        return 'undefined';
+        $what =  'undefined';
       }
-    elsif (ref($elt) eq 'ARRAY')
+    elsif (isa($elt,'UNIVERSAL'))
       {
-        return "ARRAY (".scalar @$elt.")";
+        my $base ;
+        if (isa($elt,'SCALAR')) {$base = 'SCALAR'}
+        elsif ($elt =~ /=([A-Z]+)\(/) {$base = $1 ;}
+        else {$base = "some magic with $elt" ;}  # desperate measure
+        $what = "$ref OBJECT based on $base";
       }
-    elsif (ref($elt) eq 'HASH')
+    elsif ($ref)
       {
-        return 'HASH ('. scalar keys(%$elt) . ')';
-      }
-    elsif (ref($elt) eq 'REF' or ref($elt) eq 'SCALAR' or
-           ref($elt) eq 'CODE' or ref($elt) eq 'GLOB' )
-      {
-        return ref($elt);
-      }
-    elsif (ref($elt))
-      {
-        return ref($elt). ' OBJECT ('. scalar keys(%$elt) . ')';
+        # a ref but not an object
+        $what = $ref ;
       }
     elsif ($elt =~ /\n/)
       {
-        return 'double click here to display value';
+        # multi-line string
+        $what =  'double click here to display value';
       }
     else
       {
-        return $elt ;        
+        # plain scalar
+        $what =  $elt ;        
       }
+    
+    $nb = scalar @$elt if defined $elt && isa($elt,'ARRAY') ;
+    $nb = scalar keys(%$elt) if defined $elt && isa($elt,'HASH') ;
+
+    $what .= " ($nb)" if defined $nb;
+    return $what ;
   }
+
 1;
 
 __END__
@@ -259,11 +293,23 @@ If the value is a scalar, the scalar will be displayed in the text window.
 
 =head1 Constructor parameters
 
-The mandatory 'caller' parameter will contains the ref of the object
-or hash or array to scan.
+=over 4
 
-The optionnal 'title' argument contains the title of the menu created
-by the scanner.
+=item *
+
+caller: The ref of the object or hash or array to scan (mandatory).
+
+=item *
+
+title: the title of the menu created by the scanner (optionnal)
+
+=item *
+
+destroyable: If set, a menu entry will allow the user to deatroy the scanner
+widget. (optional, default 1) . You may want to set this parameter to 0 if
+the destroy can be managed by a higher level object.
+
+=back
 
 =head1 WIDGET-SPECIFIC METHODS
 
@@ -275,10 +321,13 @@ when the scanned object gets new attributes.
 
 =head1 CAVEATS
 
-ObjScanner will fail if an object is actually a blessed scalar or a
-blessed array. If someone knows how to get the type of the reference
-that was blessed into an object from the object reference, I'd be glad
-to hear from him.
+ObjScanner may fail if an object involves a lot of internal perl
+magic.  In this case, I'd be glad to hear about and I'll try to fix
+the problem.
+
+ObjScanner does not detect recursive data structures. It will just
+keep on displaying the tree until the user gets tired of clicking on
+the HList items.
 
 =head1 AUTHOR
 

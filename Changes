@@ -1,3 +1,10 @@
+1999-05-31  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
+
+	* ObjScanner.pm: 
+	- Better support of complex (perl wise) objects
+	- added 'destroyable' parameters
+	- updated 'CAVEATS' doc
+
 1999-04-29  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.014
 
 	* ObjScanner.pm (element): Support REF and SCALAR, and does not
