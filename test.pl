@@ -6,13 +6,15 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..1\n"; }
+BEGIN { $| = 1; print "1..5\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Tk ;
 use ExtUtils::testlib ; 
 use Tk::ObjScanner ;
 $loaded = 1;
-print "ok 1\n";
+my $idx = 1;
+print "ok ",$idx++,"\n";
+my $trace = shift || 0 ;
 
 ######################### End of black magic.
 
@@ -46,17 +48,25 @@ $w_menu->pack(-fill => 'x');
 
 my $f = $w_menu->Menubutton(-text => 'File', -underline => 0) 
   -> pack(side => 'left' );
-$f->command(-label => 'Quit',  -command => sub{exit;} );
+$f->command(-label => 'Quit',  -command => sub{$mw->destroy;} );
 
-print "creating dummy object \n";
+print "creating dummy object \n" if $trace ;
 my $dummy = new toto ;
 
-print "Creating obj scanner\n";
+print "ok ",$idx++,"\n";
+
+print "Creating obj scanner\n" if $trace ;
 $mw -> ObjScanner('caller' => $dummy) -> pack ;
 
-print "Creating top level obj scanner\n";
+print "ok ",$idx++,"\n";
+
+print "Creating top level obj scanner\n" if $trace ;
 $mw -> ObjScanner('top' => 1,'caller' => $dummy) -> pack ;
+
+print "ok ",$idx++,"\n";
 
 
 MainLoop ; # Tk's
+
+print "ok ",$idx++,"\n";
 

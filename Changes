@@ -1,3 +1,7 @@
+1998-06-25  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
+
+	* 0.4 cleanup remaining traces in test.pl
+
 Tue Mar 17 15:09:42 1998  Dominique Dumont  <domi@marlis.grenoble.hp.com>
 
 	* 0.3 : Accepts '-stuff' parameters (instead of 'stuff')

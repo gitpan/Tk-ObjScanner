@@ -9,7 +9,7 @@ use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = '0.3';
+$VERSION = '0.4';
 
 Tk::Widget->Construct('ObjScanner');
 
