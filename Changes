@@ -1,3 +1,15 @@
+2000-06-07  Dominique Dumont  <domi@ISPSERV.grenoble.hp.com>
+
+	* ObjScanner.pm: 
+
+	1: Use Adjuster so that the user can adjust the relative heights
+	of the HList window and the dump window.
+	2: Provide 5 options for setting colors and images
+	3: Impose the same scrollbar style ('osoe') to HList and ROText.
+	4: Set -wideselection 0 for HList.
+	5: add 'open folder' image and display it when item has displayed
+	   children
+
 2000-04-17  Dominique Dumont  <domi@ispserv.grenoble.hp.com>
 
 	* ObjScanner.pm: 

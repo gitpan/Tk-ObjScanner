@@ -3,6 +3,28 @@ package Tk::ObjScanner;
 use strict;
 use vars qw($VERSION @ISA $errno);
 
+# Version 1.1805 - patches proposed by Rudi Farkas rudif@lecroy.com
+# 1: Use Adjuster so that the user can adjust the relative heights of the 
+# HList window and the dump window.
+# 2: Provide 5 options for setting colors and images
+# 3: Impose the same scrollbar style ('osoe') to HList and ROText.
+# 4: Set -wideselection 0 for HList.
+# The patches consist of code changes in sub Populate().
+
+# Version 1.1803 - patch proposed by Rudi Farkas rudif@lecroy.com
+# Purpose #1: fix the problem with call $scanner->configure();
+#   dies with error 
+# unknown option "oldcursor" at C:/Perl/site/lib/Tk/Derived.pm line 223.
+# The patch consists of 
+# - a modified ConfigSpecs line
+#                     oldcursor => [$hlist, undef, undef, undef],
+# Purpose #2: add 'open folder' image and display it when item has displayed children
+# The patch consists of 
+# - a line in sub Populate
+#    $cw->{openImg} = $cw->Bitmap(-file => Tk->findINC('open_folder.xbm'));
+# - method _redisplayImage()
+# - 2 calls to _redisplayImage inside displaySubItem()
+
 # Patch proposed by Rudi Farkas rudif@lecroy.com
 # Purpose: while executing displaySubItem() which may take a long time
 # if getting data from disk, another package or another machine,
@@ -19,17 +41,18 @@ use Tk::Frame;
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
 sub Populate
   {
     my ($cw,$args) = @_ ;
-    
+     
     require Tk::Menubutton ;
     require Tk::HList ;
     require Tk::ROText ;
+    require Tk::Adjuster ;
     
     $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
 
@@ -39,24 +62,39 @@ sub Populate
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
 
-    my $title = delete $args->{title} || delete $args->{-title} ||
-      ref($cw->{chief}).' scanner';
+    my $title = delete $args->{title} || delete $args->{-title} 
+      || ref($cw->{chief}).' scanner';
+
+    my $background = delete $args->{'background'} 
+      || delete $args->{'-background'} ;
+    my $selectbackground = delete $args->{'selectbackground'} 
+      || delete $args->{'-selectbackground'} ;
+
+    $cw->{itemImg} = delete $args->{'itemImage'} 
+      || delete $args->{'-itemImage'} 
+        || $cw->Bitmap(-file => Tk->findINC('file.xbm'));
+    $cw->{foldImg} = delete $args->{'foldImage'} 
+      || delete $args->{'-foldImage'} 
+        || $cw->Bitmap(-file => Tk->findINC('folder.xbm'));
+    $cw->{openImg} = delete $args->{'openImage'} 
+      || delete $args->{'-openImage'} 
+        || $cw->Bitmap(-file => Tk->findINC('openfolder.xbm'));
 
     my $menuframe = $cw ->
-      Frame (-relief => 'raised', -borderwidth => 2)-> 
+      Frame (-relief => 'raised', -borderwidth => 1)-> 
         pack(pady => 2,  fill => 'x' ) ;
 
     my $menu = $cw->{menu}= $menuframe -> Menubutton 
       (-text => $title.' menu') 
           -> pack ( fill => 'x' , side => 'left');
 
-    $menu -> command (-label => 'reload', 
+    $menu -> command (-label => 'reload',
                       command => sub{$cw->updateListBox; });
 
     my $hlist=  $cw -> Scrolled
       (
        qw\HList -selectmode single -indent 35 -separator |
-       -itemtype imagetext \
+       -itemtype imagetext -wideselection 0 \,
       )-> pack ( qw/fill both expand 1 /) ;
 
     $hlist -> configure
@@ -70,15 +108,13 @@ sub Populate
        }
       );
 
-    $cw->{itemImg} = $cw->Bitmap(-file => Tk->findINC('file.xbm'));
-    $cw->{foldImg} = $cw->Bitmap(-file => Tk->findINC('folder.xbm'));
-
     $cw->Advertise(hlist => $hlist);
-
+    
+    my $adj1 = $cw->Adjuster()->packAfter($hlist);
 
     my $window = $cw->{dumpWindow} = 
       $cw -> Scrolled('ROText', height => 10)
-        -> pack( -fill => 'both') ;
+        -> pack( -fill => 'both', -expand => 1) ;
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
@@ -86,12 +122,18 @@ sub Populate
 
     $cw->updateListBox;
 
-    $cw->ConfigSpecs(
-                     scrollbars=> [$hlist, undef, undef,'osoe'],
-                     width => [$hlist, undef, undef, 80],
-                     height => [$hlist, undef, undef, 15],
-                     oldcursor => undef,
-                     DEFAULT => [$hlist]) ;
+    $cw->ConfigSpecs
+      (
+       scrollbars=> ['DESCENDANTS', undef, undef, 'osoe'],
+       -background => ['DESCENDANTS', 'background', 'Background', $background],
+       -selectbackground => [$hlist, 'selectBackground', 'SelectBackground', 
+                             $selectbackground],
+       width => [$hlist, undef, undef, 80],
+       height => [$hlist, undef, undef, 25],
+       oldcursor => [$hlist, undef, undef, undef],
+       DEFAULT => [$hlist]
+      ) ;
+                     
     $cw->Delegates(DEFAULT => $hlist ) ;
 
     $cw->SUPER::Populate($args) ;
@@ -114,7 +156,7 @@ sub updateListBox
     #print "root adding $root \n";
     if ($h->infoExists($root))
       {
-        print "deleting root children\n";
+        #print "deleting root children\n";
         $cw->{dumpWindow}->delete('1.0','end');
         $h->deleteOffsprings($root);
       }
@@ -124,7 +166,7 @@ sub updateListBox
           (
            $root,
            -text => "ROOT:".ref($cw->{chief}), 
-       -image => $cw->{foldImg},
+           -image => $cw->{foldImg},
            -data => $cw->{chief} 
           ) 
       }
@@ -148,6 +190,7 @@ sub displaySubItem
         if ($h->info('hidden',$child)) {$h->show('entry',$child);}
         else {$h->hide('entry',$child);}
       }
+    $cw->_redisplayImage($name);
     return if scalar(@children) > 0;
 
     $cw->_swapCursor('watch');
@@ -223,7 +266,8 @@ sub displaySubItem
         #print "adding scalar $name , $item is a scalar\n";
         $cw->{dumpWindow}->insert('end',$item);
       }
-       $cw->_swapCursor();
+    $cw->_swapCursor();
+    $cw->_redisplayImage($name);
   }
 
 sub element
@@ -270,21 +314,31 @@ sub element
   }
 
 sub _swapCursor {
-       my ($cw, $cursor) = @_;
+    my ($cw, $cursor) = @_;
     my $parent = $cw->parent;
-       if (defined($cursor)) {
+    if (defined($cursor)) {
        $cw->{oldcursor} = $parent->cget('-cursor'); # save
-           $parent->configure(-cursor => $cursor);      # replace
-       }
-       else {
-           $parent->configure(-cursor => $cw->{oldcursor}); # restore
-       }
+       $parent->configure(-cursor => $cursor);      # replace
+    }
+    else {
+        $parent->configure(-cursor => $cw->{oldcursor}); # restore
+    }
     $parent->update;   # does not seem to be absolutely necessary
+}
+
+sub _redisplayImage {
+    my ($cw, $name) = @_;
+    my $h = $cw->Subwidget('hlist');
+    my @children = $h->infoChildren($name);
+    return if @children == 0;
+    my $image = $h->info('hidden',$children[0]) ? $cw->{foldImg} : $cw->{openImg};
+    $h->entryconfigure($name, '-image' => $image);
 }
 
 1;
 
 __END__
+
 
 =head1 NAME
 
@@ -295,11 +349,23 @@ Tk::ObjScanner - Tk composite widget object scanner
   use Tk::ObjScanner;
   
   my $scanner = $mw->ObjScanner( caller => $object, 
-                                 [title=>"windows"]) -> pack ;
+                                 title=>"windows") -> pack ;
+                                 
+  my $mw -> ObjScanner
+  (
+   caller 		    => $object,
+   title 		    => 'demo setting the scanner options',
+   background 	    => 'white',
+   selectbackground => 'beige',
+   foldImage 		=> $mw->Photo(-file => Tk->findINC('folder.xpm')),
+   openImage 		=> $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
+   itemImage 		=> $mw->Photo(-file => Tk->findINC('textfile.xpm')),
+  )
+  -> pack(expand => 1, fill => 'both') ;
 
 =head1 DESCRIPTION
 
-The scanner provide a GUI to scan the attributes of an object. It can
+The scanner provides a GUI to scan the attributes of an object. It can
 also be used to scan the elements of a hash or an array.
 
 The scanner is a composite widget made of a L<Tk::HList> and a text
@@ -324,13 +390,33 @@ caller: The ref of the object or hash or array to scan (mandatory).
 
 =item *
 
-title: the title of the menu created by the scanner (optionnal)
+title: the title of the menu created by the scanner (optional)
 
 =item *
 
-destroyable: If set, a menu entry will allow the user to deatroy the scanner
+destroyable: If set, a menu entry will allow the user to destroy the scanner
 widget. (optional, default 1) . You may want to set this parameter to 0 if
 the destroy can be managed by a higher level object.
+
+=item *
+
+background: the background color for subwidgets (optional)
+
+=item *
+
+selectbackground: the select background color for HList (optional)
+
+=item *
+
+itemImage: the image for a scalar item (optional, default 'file.xbm')
+
+=item *
+
+foldImage: the image for a composite item (array or hash) when closed (optional, default 'folder.xbm')
+
+=item *
+
+openImage: the image for a composite item (array or hash) when open (optional, default 'openfolder.xbm')
 
 =back
 
@@ -351,6 +437,10 @@ the problem.
 ObjScanner does not detect recursive data structures. It will just
 keep on displaying the tree until the user gets tired of clicking on
 the HList items.
+
+=head1 THANKS
+
+To Rudi Farkas for all the improvements provided to ObjScanner.
 
 =head1 AUTHOR
 

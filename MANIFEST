@@ -5,3 +5,4 @@ README
 Makefile.PL
 t/basic.t
 t/rudi.t
+t/options.t
