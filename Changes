@@ -1,3 +1,8 @@
+1999-04-21  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.013
+
+	* ObjScanner.pm : Complete re-write. It now uses HList instead of 
+	data dumper.
+
 1999-01-20  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.11
 
 	* ObjScanner.pm: removed dependance on Tk::Multi, better doc,

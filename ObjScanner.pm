@@ -9,7 +9,7 @@ use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -18,19 +18,18 @@ sub Populate
     my ($cw,$args) = @_ ;
     
     require Tk::Menubutton ;
-    require Tk::Listbox ;
+    require Tk::HList ;
     require Tk::ROText ;
     
     $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
+
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
 
     my $title = delete $args->{title} || delete $args->{-title} ||
       ref($cw->{chief}).' scanner';
 
-    my $leftframe = $cw -> Frame (bg => 'red')-> 
-      pack (side => 'left', -fill => 'both');
-    my $menuframe = $leftframe ->
+    my $menuframe = $cw ->
       Frame (-relief => 'raised', -borderwidth => 2)-> 
         pack(pady => 2,  fill => 'x' ) ;
 
@@ -41,83 +40,160 @@ sub Populate
     $menu -> command (-label => 'reload', 
                       command => sub{$cw->updateListBox; });
 
-    #pack listbox
-    my $sList = $leftframe->
-      Scrolled('Listbox', -scrollbars => 'osoe') ->
-      pack(-expand => 1, -fill => 'both');
-
-    # bind double key click
-    $sList->bind
+    my $hlist=  $cw -> Scrolled
       (
-       '<Double-1>' => 
-       sub  {
-	 my $item = shift ;
-	 my $key = $item->get ('active') ;
-         $cw->dumpKeyContent($key) ;
-       }
-      ) ;
+       qw\HList -selectmode single -indent 35 -separator |
+       -itemtype imagetext \
+      )-> pack ( qw/fill both expand 1 /) ;
 
-    # fill list box 
-    $cw->{listbox}= $sList ;
+    $hlist -> configure
+      (
+       -command => sub 
+       {
+         my $name = shift ;
+         my $item = $hlist->info('data', $name); 
+         #print "Double click $name, ref is", ref($item) ,".\n";
+         $cw->displaySubItem($name,$item)
+       }
+      );
+
+    $cw->{itemImg} = $cw->Bitmap(-file => Tk->findINC('file.xbm'));
+    $cw->{foldImg} = $cw->Bitmap(-file => Tk->findINC('folder.xbm'));
+
+    $cw->{idx}=0;
+
+    $cw->Advertise(hlist => $hlist);
     $cw->updateListBox;
 
-    my $window = $cw->{dumpWindow} = 
-      $cw -> Scrolled('ROText')
-        -> pack(side => 'right',-expand => 'yes', -fill => 'both') ;
 
-    $menu -> command (-label => 'clear', 
-                      command => sub{$window->delete('1.0','end'); });
+    my $window = $cw->{dumpWindow} = 
+      $cw -> Scrolled('ROText', height => 10)
+        -> pack( -fill => 'both') ;
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
                       command => sub{$cw->destroy; });
 
     $cw->ConfigSpecs(
-                     scrollbars=> [$window, undef, undef,'osoe'],
-                     wrap => [$window , undef, undef, 'none' ],
-                     width => [$window, undef, undef, 60],
-                     height => [$window, undef, undef, 15],
-                     DEFAULT => [$window]) ;
-    $cw->Delegates(DEFAULT => $window ) ;
+                     scrollbars=> [$hlist, undef, undef,'osoe'],
+                     width => [$hlist, undef, undef, 80],
+                     height => [$hlist, undef, undef, 15],
+                     DEFAULT => [$hlist]) ;
+    $cw->Delegates(DEFAULT => $hlist ) ;
 
     $cw->SUPER::Populate($args) ;
-  }
-
-sub dumpKeyContent
-  {
-    my $cw = shift ;
-    my $key =  shift ; # key to dump
-    
-    my %hash ;
-    $hash{$key} = $cw->{chief}{$key} ;
-    $cw->listScan(\%hash) ;
-  }
-
-sub listScan
-  {
-    my $cw = shift ;
-    my $ref =  shift ; # thing to dump, must be a hash ref
-
-    my $key ;
-    my $refs = [] ;
-    my $names = [] ;
-    foreach $key (keys %$ref)
-      {
-	push @$names, $key ;
-	push @$refs, $ref->{$key} ;
-      }
-    require Data::Dumper;
-    my $d = Data::Dumper->new ( $refs, $names ) ;
-    $cw->insert('end',$d->Dumpxs) ;
   }
 
 sub updateListBox
   {
     my $cw = shift ;
-    $cw->{listbox}->delete(0,'end') ;
-    $cw->{listbox}->insert('end', sort  keys %{$cw->{chief}} );
+
+    my $h = $cw->Subwidget('hlist');
+    my $root = 'root';
+    #print "root adding $root \n";
+
+    $h->add
+      (
+       $root,
+       -text => "ROOT:".ref($cw->{chief}), 
+       -image => $cw->{foldImg},
+       -data => $cw->{idx}++ 
+      ) unless $h->infoExists($root);
+
+    my @children = $h->infoChildren($root);
+    if (scalar @children > 0)
+      {
+        $cw->{dumpWindow}->delete('1.0','end');
+        $h->deleteOffsprings($root);
+      }
+
+    $cw->displaySubItem($root,$cw->{chief});
   }
 
+sub displaySubItem
+  {
+    my $cw = shift ;
+    my $name = shift ;
+    my $item = shift ;
+    my $h = $cw->Subwidget('hlist');
+
+    unless ($name eq 'root')
+      {
+        my @children = $h->infoChildren($name) ;
+
+        if( scalar @children > 0 ) 
+          {
+            $h->deleteOffsprings($name);
+            return ;
+          }
+      }
+
+    if (ref($item) eq 'ARRAY')
+      {
+        my $i;
+        foreach (@$item)
+          {
+            #print "adding array item $i: $_,",ref($_),"\n";
+            my $img = ref($_) ? $cw->{foldImg} : $cw->{itemImg} ;
+            $h->addchild($name,
+                         -image => $img,
+                         -text => '['.$i++."]-> ".$cw->element($_), 
+                         -data => $_);
+          }
+      }
+    elsif (ref($item))
+      {
+        # hash or object
+
+        foreach (sort keys %$item)
+          {
+            #print "adding hash key $name|$_ ", ref($item->{$_}),"\n";
+
+            my $img = ref($item->{$_}) ? $cw->{foldImg} : $cw->{itemImg} ;
+            $h->addchild($name, 
+                    -text => "{$_}-> ".$cw->element($item->{$_}),
+                    -image => $img,
+                    -data => $item->{$_});        
+          }
+      }
+    elsif (defined $item)
+      {
+        #print "adding scalar $name , $item is a scalar\n";
+        $cw->{dumpWindow}->delete('1.0','end');
+        $cw->{dumpWindow}->insert('end',$item);
+      }
+  }
+
+sub element
+  {
+    my $cw = shift ;
+    my $elt = shift;
+
+    if (ref($elt) eq 'ARRAY')
+      {
+        return "ARRAY (".scalar @$elt.")";
+      }
+    elsif (ref($elt) eq 'HASH')
+      {
+        return 'HASH ('. scalar keys(%$elt) . ')';
+      }
+    elsif (ref($elt))
+      {
+        return ref($elt). ' OBJECT ('. scalar keys(%$elt) . ')';
+      }
+    elsif ($elt =~ /\n/)
+      {
+        return 'double click here to display value';
+      }
+    elsif (not defined $elt)
+      {
+        return 'undefined';
+      }
+    else
+      {
+        return $elt ;        
+      }
+  }
 1;
 
 __END__
@@ -135,19 +211,25 @@ Tk::ObjScanner - Tk composite widget object scanner
 
 =head1 DESCRIPTION
 
-The scanner is a composite widget made of a listbox and a text window
-(actually a L<TK::ROText>). This widget acts as a scanner to the
-object passed with the 'caller' parameter. The scanner will retrieve
-all keys of the hash/object and insert them in the listbox.
+The scanner provide a GUI to scan the attributes of an object. It can
+also be used to scan the elements of a hash or an array.
 
-When the user double clicks on the key, the value will be displayed in the 
-text window. If the key value is itself a ref, the content of the ref 
-is recursively displayed in the text window (thanks to L<Data::Dumper>).
+The scanner is a composite widget made of a L<Tk::HList> and a text
+window (actually a L<TK::ROText>). This widget acts as a scanner to
+the object (or hash ref) passed with the 'caller' parameter. The
+scanner will retrieve all keys of the hash/object and insert them in
+the HList.
+
+When the user double clicks on a key, the corresponding value will be added
+in the HList.
+
+If the value is a scalar, the scalar will be displayed in the text window.
+(Which is handy if the value is a multi-line string)
 
 =head1 Constructor parameters
 
 The mandatory 'caller' parameter will contains the ref of the object
-to scan.
+or hash or array to scan.
 
 The optionnal 'title' argument contains the title of the menu created
 by the scanner.
@@ -170,7 +252,7 @@ modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 
-perl(1), Tk(3), Tk::ROText(3), Data::Dumper(3)
+perl(1), Tk(3), Tk::HList(3)
 
 =cut
 

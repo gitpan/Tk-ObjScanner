@@ -1,16 +1,22 @@
-ObjScanner is a composite widget made of a listbox and a test window
-(actually a Tk::ROText). This widget acts as a scanner to any perl object.
-The scanner will retrieve all keys of the hash of the scanned object 
-and insert them in the listbox. Then a double click on the list item will
-display its content in the text window.
+The scanner provide a GUI to scan the attributes of an object. It can
+also be used to scan the elements of a hash or an array.
 
-I grant you that reading all the attributes of an object is generally
-considered as bad manners. But I found that this widget is really handy 
-when debugging complex Tk applications which features lot of independent 
-objects.
+The scanner is a composite widget made of a HList and a text window
+(actually a L<TK::ROText>). This widget acts as a scanner to the
+object (or hash ref) passed with the 'caller' parameter. The scanner
+will retrieve all keys of the hash/object and insert them in the
+HList.
 
+When the user double clicks on a key, the corresponding value will be added
+in the HList.
 
-This module was written with perl5.004 and Tk 402.003
+If the value is a scalar, the scalar will be displayed in the text window.
+(Which is handy if the value is a multi-line string)
+
+Note that the look and fell is completely changed compared to previous
+version. 
+
+This module was written with perl5.00502 and Tk 800.013
 
 See the embedded documentation in the module for more details.
 

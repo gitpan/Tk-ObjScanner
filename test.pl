@@ -27,12 +27,18 @@ package toto ;
 sub new
   {
     my $type = shift ;
+    my $tkstuff = shift ;
     my $self = { 'key1' => 'value1',
+                 'array' => [qw/a b sdf/, {'v1' => '1', 'v2' => 2},'dfg'],
                  'key2' => {
                             'sub key1' => 'sv1',
                             'sub key2' => 'sv2'
                            },
-                 'long' => 'very long line'.'.' x 80 
+                 'piped|key' => {a => 1 , b => 2},
+                 'long' => 'very long line'.'.' x 80 ,
+                 'is undef' => undef,
+                 'some text' => "some \n dummy\n Text\n",
+                 'tk widget' => $tkstuff
              } ;
     bless $self,$type;
   }
@@ -52,12 +58,16 @@ my $f = $w_menu->Menubutton(-text => 'File', -underline => 0)
 $f->command(-label => 'Quit',  -command => sub{$mw->destroy;} );
 
 print "creating dummy object \n" if $trace ;
-my $dummy = new toto ;
+my $dummy = new toto ($mw);
 
 print "ok ",$idx++,"\n";
 
 print "Creating obj scanner\n" if $trace ;
-$mw -> ObjScanner('caller' => $dummy, title => 'test scanner')
+$mw -> ObjScanner
+  (
+   'caller' => $dummy, 
+   title => 'test scanner'
+  )
   -> pack(expand => 1, fill => 'both') ;
 
 print "ok ",$idx++,"\n";
