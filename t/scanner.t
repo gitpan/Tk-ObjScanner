@@ -1,3 +1,5 @@
+# -*- cperl -*-
+
 use warnings FATAL => qw(all);
 use ExtUtils::testlib;
 use Test::More tests => 1 ;

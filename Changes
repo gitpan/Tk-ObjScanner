@@ -1,3 +1,10 @@
+2003-11-19  Dominique Dumont  <domi@komarr.grenoble.hp.com>
+
+	* ObjScanner.pm v2.6: all configuration options can be called with
+	a hyphen (i.e '-title' instead of 'title')
+	(scan_object): call pack with hyphenated option (otherwise it
+	breaks on Solaris with Tk800.025)
+
 2003-11-14  Dominique Dumont  <domi@komarr.grenoble.hp.com>
 
 	* ObjScanner.pm: v2.5: replaced obsolete WeakRef module by

@@ -62,7 +62,7 @@ $b2->{a} = "a2";
 $b2->{b} = "b23";
 
 
-my $s = $top->ObjScanner(caller => $o , view_pseudo => 1);
+my $s = $top->ObjScanner(caller => $o , -view_pseudo => 1);
 $s->pack;
 
 print "ok ",$idx++,"\n";

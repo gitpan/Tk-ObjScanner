@@ -1,5 +1,7 @@
-# Before `make install' is performed this script should be runnable with
+# -*- cperl -*-
 use warnings FATAL => qw(all);
+
+# Before `make install' is performed this script should be runnable with
 # `make test'. After `make install' it should work as `perl test.pl'
 
 ######################### We start with some black magic to print on failure.
@@ -74,7 +76,7 @@ sub FETCH
   }
 
 package Toto ;
-use WeakRef ;
+use Scalar::Util qw(weaken) ;
 
 sub new
   {
@@ -137,7 +139,7 @@ my $w_menu = $mw->Frame(-relief => 'raised', -borderwidth => 2);
 $w_menu->pack(-fill => 'x');
 
 my $f = $w_menu->Menubutton(-text => 'File', -underline => 0) 
-  -> pack(side => 'left' );
+  -> pack(-side => 'left' );
 $f->command(-label => 'Quit',  -command => sub{$mw->destroy;} );
 
 print "creating dummy object \n" if $trace ;
@@ -146,11 +148,11 @@ my $dummy = new Toto ($mw);
 print "ok ",$idx++,"\n";
 
 print "Creating obj scanner\n" if $trace ;
-my $s = $mw -> ObjScanner ('caller' => $dummy, -columns => 4, -header => 1 );
+my $s = $mw -> ObjScanner ('-caller' => $dummy, -columns => 4, -header => 1 );
 
 $s->headerCreate(1,-text =>'coucou') ;
 
-$s -> pack(expand => 1, fill => 'both') ;
+$s -> pack(-expand => 1, fill => 'both') ;
 
 print "ok ",$idx++,"\n";
 

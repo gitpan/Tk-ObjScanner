@@ -1,4 +1,4 @@
-#! perl
+# -*- cperl -*-
 ###
 ### test of Tk:ObjScanner options
 ### by Rudi Farkas rudif@lecroy.com 27 May 2999
@@ -157,7 +157,7 @@ my $w_menu = $mw->Frame(-relief => 'raised', -borderwidth => 2);
 $w_menu->pack(-fill => 'x');
 
 my $f = $w_menu->Menubutton(-text => 'File', -underline => 0)
-  -> pack(side => 'left' );
+  -> pack(-side => 'left' );
 $f->command(-label => 'Quit',  -command => sub{$mw->destroy;} );
 
 print "creating dummy object \n" if $trace ;
@@ -177,7 +177,7 @@ my $s = $mw -> ObjScanner
    openImage 		=> $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
    itemImage 		=> $mw->Photo(-file => Tk->findINC('textfile.xpm'))
   );
-$s  -> pack(expand => 1, fill => 'both') ;
+$s  -> pack(-expand => 1, -fill => 'both') ;
 
 print "ok ",$idx++,"\n";
 

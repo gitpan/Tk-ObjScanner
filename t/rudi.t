@@ -1,4 +1,5 @@
-#! perl
+# -*- cperl -*-
+
 use warnings FATAL => qw(all);
 ###
 ### variant of test.pl for Tk:ObjScanner, with additional test cases
@@ -85,7 +86,7 @@ my $w_menu = $mw->Frame(-relief => 'raised', -borderwidth => 2);
 $w_menu->pack(-fill => 'x');
 
 my $f = $w_menu->Menubutton(-text => 'File', -underline => 0)
-  -> pack(side => 'left' );
+  -> pack(-side => 'left' );
 $f->command(-label => 'Quit',  -command => sub{$mw->destroy;} );
 
 print "creating dummy object \n" if $trace ;
@@ -100,7 +101,7 @@ my $s = $mw -> ObjScanner
    'caller' => $dummy,
    title => 'test scanner'
   );
-$s  -> pack(expand => 1, fill => 'both') ;
+$s  -> pack(-expand => 1, -fill => 'both') ;
 
 print "ok ",$idx++,"\n";
 

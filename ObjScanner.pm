@@ -1,3 +1,5 @@
+# 	$Id: ObjScanner.pm,v 2.6 2003/11/19 12:59:10 domi Exp $	
+
 package Tk::ObjScanner;
 
 use strict;
@@ -62,7 +64,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.6 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -77,12 +79,12 @@ sub scan_object
     $mw->geometry('+10+10');
     my $s = $mw -> ObjScanner
       (
-       'caller' => $object, 
-       destroyable => 1,
-       title => 'object scan'
+       '-caller' => $object, 
+       -destroyable => 1,
+       -title => 'object scan'
       );
 
-    $s -> pack(expand => 1, fill => 'both') ;
+    $s -> pack(-expand => 1, -fill => 'both') ;
     $s->OnDestroy(sub{$mw->destroy;}) ;
 
     if ($animate)
@@ -127,10 +129,12 @@ sub Populate
     my $scanned_data = delete $args->{'caller'} || delete $args->{'-caller'};
     $cw->{chief} = \$scanned_data ;
 
-    my $destroyable = defined $args->{'destroyable'} ? 
-      delete $args->{'destroyable'} : 1 ;
+    my $destroyable = 
+      defined $args->{'-destroyable'} ? delete $args->{'-destroyable'} : 
+	defined $args->{'destroyable'} ? delete $args->{'destroyable'} : 1 ;
 
-    my $view_pseudo = delete $args->{'view_pseudo'} || 0;
+    my $view_pseudo = delete $args->{'-view_pseudo'} || 
+      delete $args->{'view_pseudo'} || 0;
 
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
@@ -159,14 +163,14 @@ sub Populate
       {
         $menuframe = $cw ->
           Frame (-relief => 'raised', -borderwidth => 1)-> 
-            pack(pady => 2,  fill => 'x' ) ;
+            pack(-pady => 2,  -fill => 'x' ) ;
 
         $menu = $cw->{menu} = $menuframe -> Menubutton 
           (-text => $title.' menu') 
-            -> pack ( fill => 'x' , side => 'left');
+            -> pack ( -fill => 'x' , -side => 'left');
 
         $menu -> command (-label => 'reload',
-                          command => sub{$cw->updateListBox; });
+                          -command => sub{$cw->updateListBox; });
       }
 
     my %hlist_args ;
@@ -177,7 +181,7 @@ sub Populate
       (
        qw\HList -selectmode single -indent 35 -separator |
        -itemtype imagetext -wideselection 0 \, %hlist_args
-      )-> pack ( qw/fill both expand 1 /) ;
+      )-> pack ( qw/-fill both -expand 1 /) ;
 
     # See Mastering Perl/Tk page 364 for details
     $hlist->bind('<Double-B1-ButtonRelease>' => 
@@ -204,25 +208,25 @@ sub Populate
     $popup -> withdraw ;
     $cw->{dumpLabel} = $popup -> Label(-text => 'not yet ...') ;
     $cw->{dumpLabel} ->pack(-fill => 'x') ;
-    $cw->{dumpWindow} = $popup -> Scrolled('ROText', height => 10) ;
+    $cw->{dumpWindow} = $popup -> Scrolled('ROText', -height => 10) ;
     $cw->{dumpWindow} -> pack( -fill => 'both', -expand => 1) ;
     $popup->Button(-text => 'OK',
                    -command => sub{$popup ->withdraw();}) -> pack ;
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
-                      command => sub{$cw->destroy; }) 
+                      -command => sub{$cw->destroy; }) 
       if defined $cw->{menu} && $destroyable ;
 
     $cw->ConfigSpecs
       (
-       scrollbars=> ['DESCENDANTS', undef, undef, 'osoe'],
+       -scrollbars=> ['DESCENDANTS', undef, undef, 'osoe'],
        -background => ['DESCENDANTS', 'background', 'Background', $background],
        -selectbackground => [$hlist, 'selectBackground', 'SelectBackground', 
                              $selectbackground],
-       width => [$hlist, undef, undef, 80],
-       height => [$hlist, undef, undef, 25],
-       oldcursor => [$hlist, undef, undef, undef],
+       -width => [$hlist, undef, undef, 80],
+       -height => [$hlist, undef, undef, 25],
+       -oldcursor => [$hlist, undef, undef, undef],
        DEFAULT => [$hlist]
       ) ;
 
@@ -239,7 +243,7 @@ sub Populate
        -onvalue => 1, 
        -offvalue => 0,
        -command => sub{$cw->updateListBox;}
-      ) -> pack(side => 'right') if defined $menuframe ;
+      ) -> pack(-side => 'right') if defined $menuframe ;
 
     $cw->updateListBox;
 
@@ -611,20 +615,20 @@ Tk::ObjScanner - Tk data scanner
   # regular use
   use Tk::ObjScanner;
 
-  my $scanner = $mw->ObjScanner( caller => $object, 
-                                 title=>"windows") -> pack ;
+  my $scanner = $mw->ObjScanner( -caller => $object, 
+                                 -title=>"windows") -> pack ;
 
   my $mw -> ObjScanner
   (
-   caller 	    => $object,
-   title 	    => 'demo setting the scanner options',
-   background 	    => 'white',
-   selectbackground => 'beige',
-   foldImage 	    => $mw->Photo(-file => Tk->findINC('folder.xpm')),
-   openImage 	    => $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
-   itemImage 	    => $mw->Photo(-file => Tk->findINC('textfile.xpm')),
+   -caller 	    => $object,
+   -title 	    => 'demo setting the scanner options',
+   -background 	    => 'white',
+   -selectbackground => 'beige',
+   -foldImage 	    => $mw->Photo(-file => Tk->findINC('folder.xpm')),
+   -openImage 	    => $mw->Photo(-file => Tk->findINC('openfolder.xpm')),
+   -itemImage 	    => $mw->Photo(-file => Tk->findINC('textfile.xpm')),
   )
-  -> pack(expand => 1, fill => 'both') ;
+  -> pack(-expand => 1, -fill => 'both') ;
 
   # non-intrusive scan style
 
@@ -676,42 +680,43 @@ resumed.
 
 =over 4
 
-=item caller
+=item C<caller>
 
-The ref of the object or hash or array to scan (mandatory).
+The ref of the object or hash or array to scan (mandatory). (you can
+also use 'C<-caller>')
 
-=item title
+=item C<-title>
 
 The title of the menu created by the scanner (optional)
 
-=item background
+=item C<-background>
 
 The background color for subwidgets (optional)
 
-=item selectbackground
+=item C<-selectbackground>
 
 The select background color for HList (optional)
 
-=item itemImage
+=item C<-itemImage>
 
 The image for a scalar item (optional, default 'file.xbm')
 
-=item foldImage
+=item C<-foldImage>
 
 The image for a composite item (array or hash) when closed
 (optional, default 'folder.xbm')
 
-=item openImage
+=item C<-openImage>
 
 The image for a composite item (array or hash) when open
 (optional, default 'openfolder.xbm')
 
-=item show_menu
+=item C<-show_menu>
 
 ObjScanner can feature a menu with 'reload' button, 'view
 pseudo-hash' check box. (optional default 0).
 
-=item destroyable
+=item C<-destroyable>
 
 If set, a menu entry will allow the user to destroy the scanner
 widget. (optional, default 1) . You may want to set this parameter to
