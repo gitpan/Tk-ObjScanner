@@ -9,7 +9,7 @@
 BEGIN { $| = 1; print "1..1\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Tk ;
-use ExtUtils::Embed ; 
+use ExtUtils::testlib ; 
 use Tk::ObjScanner ;
 $loaded = 1;
 print "ok 1\n";
@@ -52,7 +52,10 @@ print "creating dummy object \n";
 my $dummy = new toto ;
 
 print "Creating obj scanner\n";
-my $scan = $mw -> ObjScanner('caller' => $dummy) -> pack ;
+$mw -> ObjScanner('caller' => $dummy) -> pack ;
+
+print "Creating top level obj scanner\n";
+$mw -> ObjScanner('top' => 1,'caller' => $dummy) -> pack ;
 
 
 MainLoop ; # Tk's

@@ -9,7 +9,7 @@ use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = '0.2';
+$VERSION = '0.3';
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -21,14 +21,23 @@ sub Populate
     require Tk::Listbox ;
     require Tk::Multi::Text ;
 
-    my $title = 'scanner';
-    $title = delete $args->{title} if defined $args->{title} ;
-
-    $cw->{chief} = delete $args->{'caller'} ;
+    $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
 
-    my $gf = $cw -> Frame (relief => 'raised', borderwidth => 3 ) -> pack ;
+    my $title = delete $args->{title} || delete $args->{-title} ||
+      ref($cw->{chief}).' scanner';
+
+    my $gf ;
+    if ((defined $args->{top} and delete $args->{top} == 1) or
+        (defined $args->{-top} and delete $args->{-top} == 1))
+      {
+        $gf = $cw ->Toplevel(-title => 'Scanning '.ref($cw->{chief})) ;
+      }
+    else
+      {
+        $gf = $cw -> Frame (relief => 'raised', borderwidth => 3 ) -> pack ;
+      }
 
     my $leftframe = $gf -> Frame -> 
       pack (side => 'left', -expand => 'yes', -fill => 'y');
@@ -84,7 +93,8 @@ sub Populate
 
     #pack MultiText
     my $window = $cw->{dumpWindow} = 
-      $gf -> MultiText ('menu_button' => $menu) -> pack(side => 'right') ;
+      $gf -> MultiText ('menu_button' => $menu ->cget('menu'))
+        -> pack(side => 'right') ;
 
     $window -> setSize(15,60);
 
@@ -176,6 +186,10 @@ wants to update the listbox if it has defined some new keys.
 =head1 AUTHOR
 
 Dominique Dumont, Dominique_Dumont@grenoble.hp.com
+
+Copyright (c) 1997-1998 Dominique Dumont. All rights reserved.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
 
 =head1 SEE ALSO
 

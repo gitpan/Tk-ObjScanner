@@ -1,3 +1,7 @@
+Tue Mar 17 15:09:42 1998  Dominique Dumont  <domi@marlis.grenoble.hp.com>
+
+	* 0.3 : Accepts '-stuff' parameters (instead of 'stuff')
+
 Thu Feb 12 18:07:00 1998  Dominique Dumont  <domi@marlis.grenoble.hp.com>
 
 	* 0.2 : Patch made by Achim Bohnet (Thanks)
