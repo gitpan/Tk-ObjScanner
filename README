@@ -20,6 +20,11 @@ window.
 If the value is a code ref, the deparsed code will be displayed in a
 popup text window.
 
+This widget can be used as a regular widget in a Tk application or can
+be used as an autonomous popup widget that will display the content of
+a data structure. The latter is like a call to a graphical
+Data::Dumper.
+
 This module was written with perl5.8.0 and Tk 800.024
 
 See the embedded documentation in the module for more details.

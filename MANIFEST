@@ -8,3 +8,4 @@ t/basic.t
 t/rudi.t
 t/options.t
 t/pseudo_hash.t
+t/scanner.t

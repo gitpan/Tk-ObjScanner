@@ -2,7 +2,6 @@ package Tk::ObjScanner;
 
 use strict;
 use warnings FATAL => qw(all);
-use vars qw($VERSION @ISA $errno);
 
 # Version 1.1805 - patches proposed by Rudi Farkas rudif@lecroy.com
 # 1: Use Adjuster so that the user can adjust the relative heights of the 
@@ -59,12 +58,57 @@ use Tk::Derived ;
 use Tk::Frame;
 use Data::Dumper;
 
-@ISA = qw(Tk::Derived Tk::Frame);
+our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 2.2 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
+
+sub scan_object
+  {
+    require Tk ;
+    import Tk;
+    my $object = shift ;
+    my $animate = shift || 0; # used by tests
+
+    my $mw = MainWindow-> new ;
+    $mw->geometry('+10+10');
+    my $s = $mw -> ObjScanner
+      (
+       'caller' => $object, 
+       destroyable => 1,
+       title => 'object scan'
+      );
+
+    $s -> pack(expand => 1, fill => 'both') ;
+    $s->OnDestroy(sub{$mw->destroy;}) ;
+
+    if ($animate)
+      {
+        $s->_scan('root') ;
+      }
+    else
+      {
+        &MainLoop ; # Tk's
+      }
+  }
+
+# used by test
+sub _scan
+  {
+    my $cw = shift ;
+    my $topName = shift ;
+    $cw->yview($topName) ;
+    $cw->after(200); # sleep 300ms
+
+    foreach my $c ($cw->infoChildren($topName))
+      {
+        $cw->displaySubItem($c);
+        $cw->_scan($c);
+      }
+    $cw->idletasks;
+  }
 
 sub Populate
   {
@@ -110,7 +154,7 @@ sub Populate
 
     my $menuframe;
     my $menu ;
-    if ($cw->{show_menu})
+    if ($destroyable or $cw->{show_menu})
       {
         $menuframe = $cw ->
           Frame (-relief => 'raised', -borderwidth => 1)-> 
@@ -558,6 +602,7 @@ Tk::ObjScanner - Tk data scanner
 
 =head1 SYNOPSIS
 
+  # regular use
   use Tk::ObjScanner;
 
   my $scanner = $mw->ObjScanner( caller => $object, 
@@ -575,10 +620,22 @@ Tk::ObjScanner - Tk data scanner
   )
   -> pack(expand => 1, fill => 'both') ;
 
+  # non-intrusive scan style
+
+  # user code to produce data
+  Tk::ObjScanner::scan_object($mydata) ;
+  # resume user code
+
 =head1 DESCRIPTION
 
 The scanner provides a GUI to scan the attributes of an object. It can
 also be used to scan the elements of a hash or an array.
+
+This widget can be used as a regular widget in a Tk application or can
+be used as an autonomous popup widget that will display the content of
+a data structure. The latter is like a call to a graphical
+L<Data::Dumper>. The scanner can be used in an autnomous way with the
+C<scan_object> function.
 
 The scanner is a composite widget made of a menubar and L<Tk::HList>.
 This widget acts as a scanner to the object (or hash ref) passed with
@@ -594,6 +651,18 @@ pop-up window.
 
 Tied scalar, hash or array internal can also be scanned by clicking on
 the I<middle> button to open them.
+
+=head1 Autonomous widget
+
+=head2 scan_object( data )
+
+This function is not exported and must be called this way:
+
+  Tk::ObjScanner::scan_object($data);
+
+This function will load Tk and pop up a scanner widget. When the user
+destroy the widget (with C<File -> destroy> menu), the user code is
+resumed.
 
 =head1 Constructor parameters
 
