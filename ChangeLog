@@ -1,3 +1,15 @@
+2004-07-28  author  <author@komarr.grenoble.hp.com>
+
+	* ObjScanner.pm v2.8: Applied patch from MAREKR@cpan.org (See
+	https://rt.cpan.org/Ticket/Display.html?id=5197) to better handle
+	pseudo hashes (even though pseudo hashes are still obsolete)
+
+2004-07-27  author  <author@komarr.grenoble.hp.com>
+
+	* ObjScanner.pm v2.7: Applied Slaven Rezic's patch which fixes
+	image associated to array elements. (See
+	https://rt.cpan.org/Ticket/Display.html?id=6831)
+
 2003-11-28  Dominique Dumont  <domi@komarr.grenoble.hp.com>
 
 	* t/basic.t (new): works with Tk804.025 

@@ -1,4 +1,4 @@
-# 	$Id: ObjScanner.pm,v 2.7 2003/11/28 17:16:19 domi Exp $	
+# 	$Id: ObjScanner.pm,v 2.9 2004/07/28 10:49:54 domi Exp $	
 
 package Tk::ObjScanner;
 
@@ -64,7 +64,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.7 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.9 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -250,14 +250,6 @@ sub Populate
     return $cw ;
   }
 
-sub isObject
-  {
-    my $ref = shift ; # not a method !
-    return 0 unless $ref ;
-    return
-      scalar grep ($ref eq $_, qw/REF SCALAR CODE GLOB ARRAY HASH/) ? 0 : 1;
-  }
-
 # function to find whether a reference is a pseudo hash
 # return the nb of elements of the pseudo hash
 sub isPseudoHash 
@@ -269,20 +261,18 @@ sub isPseudoHash
                      $cw->{viewpseudohash}  &&
                      isa($item,'ARRAY')     &&
                      scalar @$item          &&
-                     ref $item->[0] eq 'HASH');
+                     ref($item->[0]) =~ /^(HASH|pseudohash)$/);
+
     my @indexes = values %{ $item->[0] } ;
+    my $nb_of_elt = scalar keys %{ $item->[0] } ;
 
-    return 0 if scalar grep( /\D/, @indexes ) or 
-      scalar grep( $_ > $#$item,@indexes  ) ;
+    # check that all indexes are numbers and within the range
+    return 0 if scalar grep( /\D/ || $_ < 1 || $_ > $nb_of_elt, @indexes );
 
-    my $ret = scalar keys %{ $item->[0] } ;
-    return 0 unless $ret >= scalar @$item - 1;
+    # check that not more array items than in the range are defined
+    return 0 unless $nb_of_elt >= scalar @$item - 1;
 
-    for (values %{ $item->[0] }) 
-      {
-        return 0 if ($_ !~ /^\d+$/ || $_ < 1);
-      }
-    return $ret ;
+    return $nb_of_elt ;
   }
 
 sub updateListBox
@@ -388,7 +378,6 @@ sub displayObject
     my $ref = shift ;
 
     my $h = $cw->Subwidget('hlist');
-    my $isObject = isObject($$ref) ;
     my $isPseudoHash = $cw->isPseudoHash($$ref);
 
     if (isa($$ref,'ARRAY') and not $isPseudoHash)
@@ -396,7 +385,7 @@ sub displayObject
         foreach my $i (0 .. $#$$ref)
           {
             #print "adding array item $i: $_,",ref($_),"\n";
-            my $img = $$ref->[$i] ? $cw->{foldImg} : $cw->{itemImg} ;
+            my $img = ref $$ref->[$i] ? $cw->{foldImg} : $cw->{itemImg} ;
             my $npath = $h->addchild
               (
                $name,
@@ -644,7 +633,7 @@ also be used to scan the elements of a hash or an array.
 This widget can be used as a regular widget in a Tk application or can
 be used as an autonomous popup widget that will display the content of
 a data structure. The latter is like a call to a graphical
-L<Data::Dumper>. The scanner can be used in an autnomous way with the
+L<Data::Dumper>. The scanner can be used in an autonomous way with the
 C<scan_object> function.
 
 The scanner is a composite widget made of a menubar and L<Tk::HList>.

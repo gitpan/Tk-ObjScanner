@@ -1,4 +1,4 @@
-Changes
+ChangeLog
 ObjScanner.pm
 MANIFEST
 README
@@ -9,3 +9,4 @@ t/rudi.t
 t/options.t
 t/pseudo_hash.t
 t/scanner.t
+META.yml                                 Module meta-data (added by MakeMaker)
