@@ -10,7 +10,7 @@ use Tk::Frame;
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -228,7 +228,7 @@ sub element
       {
         $what =  'undefined';
       }
-    elsif (isa($elt,'UNIVERSAL'))
+    elsif ($ref and isa($elt,'UNIVERSAL'))
       {
         my $base ;
         if (isa($elt,'SCALAR')) {$base = 'SCALAR'}
@@ -249,7 +249,7 @@ sub element
     else
       {
         # plain scalar
-        $what =  $elt ;        
+        $what =  "'$elt'" ;        
       }
     
     $nb = scalar @$elt if defined $elt && isa($elt,'ARRAY') ;

@@ -1,4 +1,10 @@
-1999-05-31  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
+1999-07-06  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.017
+
+	* ObjScanner.pm (element): bug fix on string display
+	* Thanks to Rudi Farkas for contributing test cases with
+	Math::BigInt and Filehandle
+
+1999-05-31  Dominique Dumont  <domi@barrayar.grenoble.hp.com> v1.016
 
 	* ObjScanner.pm: 
 	- Better support of complex (perl wise) objects

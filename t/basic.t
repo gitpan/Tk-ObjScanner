@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..5\n"; }
+BEGIN { $| = 1; print "1..4\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Tk ;
 use ExtUtils::testlib ; 
@@ -29,23 +29,27 @@ sub new
     my $type = shift ;
     my $tkstuff = shift ;
     my $scalar = 'dummy scalar ref value';
-    open (FILE,"test.pl") || die "can't open myself !\n";
+    open (FILE,"t/basic.t") || die "can't open myself !\n";
     my $glob = \*FILE ; # ???
-    my $self = { 'key1' => 'value1',
-                 'array' => [qw/a b sdf/, {'v1' => '1', 'v2' => 2},'dfg'],
-                 'key2' => {
-                            'sub key1' => 'sv1',
-                            'sub key2' => 'sv2'
-                           },
-                 'some_code' => sub {print "some_code\n";},
-                 'piped|key' => {a => 1 , b => 2},
-                 'scalar_ref_ref' => \\$scalar,
-                 'filehandle' => $glob,
-                 'long' => 'very long line'.'.' x 80 ,
-                 'is undef' => undef,
-                 'some text' => "some \n dummy\n Text\n",
-                 'tk widget' => $tkstuff
-             } ;
+    my $self = 
+      {
+       'key1' => 'value1',
+       'array' => [qw/a b sdf/, {'v1' => '1', 'v2' => 2},'dfg'],
+       'key2' => {
+                  'sub key1' => 'sv1',
+                  'sub key2' => 'sv2'
+                 },
+       'some_code' => sub {print "some_code\n";},
+       'piped|key' => {a => 1 , b => 2},
+       'scalar_ref_ref' => \\$scalar,
+       'filehandle' => $glob,
+       'empty string' => '',
+       'non_empty string' => ' ',
+       'long' => 'very long line'.'.' x 80 ,
+       'is undef' => undef,
+       'some text' => "some \n dummy\n Text\n",
+       'tk widget' => $tkstuff
+      } ;
     bless $self,$type;
   }
 

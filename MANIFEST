@@ -3,4 +3,5 @@ ObjScanner.pm
 MANIFEST
 README
 Makefile.PL
-test.pl
+t/basic.t
+t/rudi.t
