@@ -1,9 +1,7 @@
 Tk::ObjScanner provides a GUI to scan any perl data including the
 attributes of an object.
 
-Starting from version 1.020:
-- pseudo hashes are also correctly viewed.
-- a demo is installed so Tk's widget demo will feature ObjScanner
+
 
 The scanner is a composite widget made of a HList. This widget acts as
 a scanner to the object (or hash ref) passed with the 'caller'
@@ -24,6 +22,11 @@ This widget can be used as a regular widget in a Tk application or can
 be used as an autonomous popup widget that will display the content of
 a data structure. The latter is like a call to a graphical
 Data::Dumper.
+
+The scanner recognizes:
+- pseudo hashes
+- tied hashes arrays or scalars
+- weak reference (See WeakRef for details)
 
 This module was written with perl5.8.0 and Tk 800.024
 

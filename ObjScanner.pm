@@ -2,6 +2,7 @@ package Tk::ObjScanner;
 
 use strict;
 use warnings FATAL => qw(all);
+use WeakRef ;
 
 # Version 1.1805 - patches proposed by Rudi Farkas rudif@lecroy.com
 # 1: Use Adjuster so that the user can adjust the relative heights of the 
@@ -61,7 +62,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.3 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -551,6 +552,11 @@ sub analyse_element
             isa($$ref,'HASH') ? scalar keys(%$$ref) : undef ;
       }
 
+    if ($str_ref and isweak($$ref))
+      {
+        $info{description} .= ' (weak ref)';
+      }
+
     return \%info ;
   }
 
@@ -651,6 +657,8 @@ pop-up window.
 
 Tied scalar, hash or array internal can also be scanned by clicking on
 the I<middle> button to open them.
+
+Weak references are recognized (See L<WeakRef> for details)
 
 =head1 Autonomous widget
 

@@ -74,6 +74,7 @@ sub FETCH
   }
 
 package Toto ;
+use WeakRef ;
 
 sub new
   {
@@ -89,6 +90,7 @@ sub new
 
     my $scalar = 'dummy scalar ref value';
     open (FILE,"t/basic.t") || die "can't open myself !\n";
+    my %a_hash = (for => 'weak ref') ;
     my $glob = \*FILE ; # ???
     my $self = 
       {
@@ -108,11 +110,16 @@ sub new
        'is undef' => undef,
        'some text' => "some \n dummy\n Text\n",
        'tied hash' => \%h ,
+       'not weak' => \%a_hash,
+       'weak' => \%a_hash ,
        'tk widget' => $tkstuff
       };
     
     tie ($self->{tied_scalar}, 'MyScalar', 'dummy key' => 'dummy value')
       or die ;
+
+    weaken($self->{weak}) ;
+
 
     $self->{tied_scalar} = 'some scalar huh?';
 

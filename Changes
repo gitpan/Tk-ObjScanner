@@ -1,4 +1,9 @@
-2003-02-28  Dominique Dumont  <domi@komarr.grenoble.hp.com>
+2003-03-21  Dominique Dumont  <domi@komarr.grenoble.hp.com>
+
+	* ObjScanner.pm v 2.4 (analyse_element): 
+	- recognize weak references
+
+2003-02-28  Dominique Dumont v2.3  <domi@komarr.grenoble.hp.com>
 
 	* ObjScanner.pm (scan_object): 
 	- added autonomous scan popup widget

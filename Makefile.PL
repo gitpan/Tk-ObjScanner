@@ -9,7 +9,7 @@ WriteMakefile
     PM            => 
    {  
     'ObjScanner.pm'   => '$(INST_LIB)/Tk/ObjScanner.pm',
-    'demo/objscan.pl' => '$(INST_ARCHLIB)/Tk/demos/widtrib/objscan.pl'
+    'demo/objscan.pl' => '$(INST_LIB)/Tk/demos/widtrib/objscan.pl'
    },
    ($] >= 5.005 ?
     (ABSTRACT   => 'A scanner to view an object\'s attribute',
@@ -19,6 +19,7 @@ WriteMakefile
     'Tk' =>0,
     'Tk::Adjuster' => 0,
     'Tk::HList' => 0,
-    'Tk::ROText' => 0
+    'Tk::ROText' => 0,
+    'WeakRef' => '0.01'
    }
 );
