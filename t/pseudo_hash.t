@@ -1,5 +1,5 @@
+# -*- cperl -*-
 # Before `make install' is performed this script should be runnable with
-use warnings FATAL => qw(all);
 # `make test'. After `make install' it should work as `perl test.pl'
 
 ######################### We start with some black magic to print on failure.
@@ -12,6 +12,7 @@ END {print "not ok 1\n" unless $loaded;}
 use Tk ;
 use ExtUtils::testlib ; 
 use Tk::ObjScanner ;
+use warnings ;
 $loaded = 1;
 my $idx = 1;
 print "ok ",$idx++,"\n";

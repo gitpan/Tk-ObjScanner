@@ -1,8 +1,8 @@
 package Tk::ObjScanner;
 
 use strict;
-use warnings FATAL => qw(all);
-use WeakRef ;
+use warnings ;
+use Scalar::Util qw(weaken isweak);
 
 # Version 1.1805 - patches proposed by Rudi Farkas rudif@lecroy.com
 # 1: Use Adjuster so that the user can adjust the relative heights of the 
@@ -62,7 +62,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.4 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.5 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -747,6 +747,9 @@ not. When a reference is believed to be a pseudo-hash, ObjScanner will
 display the content of the reference like a hash. If the reference is
 should not be displayed like a pseudo-hash, you can turn off the
 pseudo-hash view with the check button on the top right of the widget.
+
+Aynway, pseudo-hashes are deprecated from perl 5.8.0. Hence they are
+also deprecated in ObjScanner.
 
 The icon used for tied scalar changes from scalar icon to folder icon
 when opening the object hidden behind the tied scalar (using the

@@ -24,11 +24,13 @@ a data structure. The latter is like a call to a graphical
 Data::Dumper.
 
 The scanner recognizes:
-- pseudo hashes
 - tied hashes arrays or scalars
-- weak reference (See WeakRef for details)
+- weak reference (See weaken function of Scalar::Util for details)
 
-This module was written with perl5.8.0 and Tk 800.024
+Pseudo-hashes are deprecated.
+
+This module was written with perl5.8.2 and Tk 800.024. But should work
+with older versions of perl (> 5.6.1) or Tk.
 
 See the embedded documentation in the module for more details.
 

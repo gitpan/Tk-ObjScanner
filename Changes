@@ -1,3 +1,9 @@
+2003-11-14  Dominique Dumont  <domi@komarr.grenoble.hp.com>
+
+	* ObjScanner.pm: v2.5: replaced obsolete WeakRef module by
+	Scalar::Util
+	Note that pseudo-hashes are deprecated. 
+
 2003-03-21  Dominique Dumont  <domi@komarr.grenoble.hp.com>
 
 	* ObjScanner.pm v 2.4 (analyse_element): 

@@ -7,19 +7,18 @@ WriteMakefile
    'VERSION_FROM' => 'ObjScanner.pm',
    'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
     PM            => 
-   {  
+   {
     'ObjScanner.pm'   => '$(INST_LIB)/Tk/ObjScanner.pm',
     'demo/objscan.pl' => '$(INST_LIB)/Tk/demos/widtrib/objscan.pl'
    },
-   ($] >= 5.005 ?
-    (ABSTRACT   => 'A scanner to view an object\'s attribute',
-     AUTHOR     => 'Dominique Dumont (domi@barrayar.grenoble.hp.com)') : ()),
+   ABSTRACT   => 'A scanner to view an object\'s attribute',
+   AUTHOR     => 'Dominique Dumont (domi@barrayar.grenoble.hp.com)',
    'PREREQ_PM' =>
    {
-    'Tk' =>0,
+    'Tk' => 0,
     'Tk::Adjuster' => 0,
     'Tk::HList' => 0,
     'Tk::ROText' => 0,
-    'WeakRef' => '0.01'
+    'Scalar::Util' => 1.01
    }
 );
