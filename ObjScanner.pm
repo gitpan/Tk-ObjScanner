@@ -9,7 +9,7 @@ use Tk::Frame;
 
 @ISA = qw(Tk::Derived Tk::Frame);
 
-$VERSION = '0.4';
+$VERSION = '0.5';
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -28,19 +28,8 @@ sub Populate
     my $title = delete $args->{title} || delete $args->{-title} ||
       ref($cw->{chief}).' scanner';
 
-    my $gf ;
-    if ((defined $args->{top} and delete $args->{top} == 1) or
-        (defined $args->{-top} and delete $args->{-top} == 1))
-      {
-        $gf = $cw ->Toplevel(-title => 'Scanning '.ref($cw->{chief})) ;
-      }
-    else
-      {
-        $gf = $cw -> Frame (relief => 'raised', borderwidth => 3 ) -> pack ;
-      }
-
-    my $leftframe = $gf -> Frame -> 
-      pack (side => 'left', -expand => 'yes', -fill => 'y');
+    my $leftframe = $cw -> Frame (bg => 'red')-> 
+      pack (side => 'left', -fill => 'both');
     my $menuframe = $leftframe ->
       Frame (-relief => 'raised', -borderwidth => 2)-> 
         pack(pady => 2,  fill => 'x' ) ;
@@ -53,31 +42,12 @@ sub Populate
                       command => sub{$cw->updateListBox; });
 
     #pack listbox
-    my $w_frame = $leftframe ->Frame(-borderwidth => '.5c');
-    $w_frame->pack(-side => 'top', -expand => 'yes', -fill => 'y');
-
-    my $w_frame_scroll = $w_frame->Scrollbar;
-    $w_frame_scroll->pack(-side => 'right', -fill => 'y');
-
-    my $w_frame_scroll_h = $w_frame->Scrollbar(orient=>'horiz');
-    $w_frame_scroll_h->pack(-side => 'bottom', -fill => 'x');
-
-    my $w_frame_list = $w_frame->Listbox
-      (
-       #font => '-bitstream-prestige-medium-r-normal--16-100-72-72-m-60-hp-roman8',
-       -xscrollcommand => [$w_frame_scroll_h => 'set'],
-       -yscrollcommand => [$w_frame_scroll => 'set'],
-       -setgrid        => 1,
-       -height         => 5,
-       width => 25
-      );
-    
-    $w_frame_scroll->configure(-command => [$w_frame_list => 'yview']);
-    $w_frame_scroll_h->configure(-command => [$w_frame_list => 'xview']);
-    $w_frame_list->pack(-side => 'left', -expand => 'yes', -fill => 'both');
+    my $sList = $leftframe->
+      Scrolled('Listbox', -scrollbars => 'osoe') ->
+      pack(-expand => 1, -fill => 'both');
 
     # bind double key click
-    $w_frame_list->bind
+    $sList->bind
       (
        '<Double-1>' => 
        sub  {
@@ -88,22 +58,26 @@ sub Populate
       ) ;
 
     # fill list box 
-    $cw->{listbox}= $w_frame_list ;
+    $cw->{listbox}= $sList ;
     $cw->updateListBox;
 
     #pack MultiText
     my $window = $cw->{dumpWindow} = 
-      $gf -> MultiText ('menu_button' => $menu ->cget('menu'))
-        -> pack(side => 'right') ;
-
-    $window -> setSize(15,60);
+      $cw -> MultiText ('menu_button' => $menu ->cget('menu'))
+        -> pack(side => 'right',-expand => 'yes', -fill => 'both') ;
 
     # add a destroy commend to the menu
     $menu -> command (-label => 'destroy', 
                       command => sub{$cw->destroy; });
 
-    $cw->ConfigSpecs(DEFAULT => [$window]) ;
+    $cw->ConfigSpecs(
+                     'scrollbars'=> [$window, undef, undef,'osoe'],
+                     width => [$window, undef, undef, 60],
+                     height => [$window, undef, undef, 15],
+                     DEFAULT => [$window]) ;
     $cw->Delegates(DEFAULT => $window ) ;
+
+    $cw->SUPER::Populate($args) ;
   }
 
 sub dumpKeyContent

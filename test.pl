@@ -56,15 +56,9 @@ my $dummy = new toto ;
 print "ok ",$idx++,"\n";
 
 print "Creating obj scanner\n" if $trace ;
-$mw -> ObjScanner('caller' => $dummy) -> pack ;
+$mw -> ObjScanner('caller' => $dummy) -> pack(expand => 1, fill => 'both') ;
 
 print "ok ",$idx++,"\n";
-
-print "Creating top level obj scanner\n" if $trace ;
-$mw -> ObjScanner('top' => 1,'caller' => $dummy) -> pack ;
-
-print "ok ",$idx++,"\n";
-
 
 MainLoop ; # Tk's
 

@@ -9,6 +9,6 @@ WriteMakefile
    'PREREQ_PM' =>
    {
     'Data::Dumper' => 0,
-    'Tk::Multi::Text' => 0
+    'Tk::Multi::Text' => '2.001'
    }
 );

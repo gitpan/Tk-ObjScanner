@@ -1,3 +1,7 @@
+v0.5: 1998-08-18  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
+
+	* ObjScanner.pm: simplified and adapted for new Multi::Text
+
 1998-06-25  Dominique Dumont  <domi@barrayar.grenoble.hp.com>
 
 	* 0.4 cleanup remaining traces in test.pl
