@@ -1,4 +1,6 @@
-2001-01-12  Dominique Dumont  <domi@komarr.grenoble.hp.com> v1.020
+2001-01-12  Dominique Dumont  <domi@komarr.grenoble.hp.com> v1.021
+
+	* Makefile.PL: fixed Makefile.PL
 
 	* ObjScanner.pm:
 	- added pseudo hash viewer

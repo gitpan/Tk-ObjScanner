@@ -6,8 +6,11 @@ WriteMakefile
    'NAME'	=> 'Tk::ObjScanner',
    'VERSION_FROM' => 'ObjScanner.pm',
    'dist' => {COMPRESS=>'gzip -9f', SUFFIX => 'gz'},
-    PM            => {'demo/objscan.pl' =>
-        '$(INST_ARCHLIB)/Tk/demos/widtrib/objscan.pl'},
+    PM            => 
+   {  
+    'ObjScanner.pm'   => '$(INST_LIB)/Tk/ObjScanner.pm',
+    'demo/objscan.pl' => '$(INST_ARCHLIB)/Tk/demos/widtrib/objscan.pl'
+   },
    ($] >= 5.005 ?
     (ABSTRACT   => 'A scanner to view an object\'s attribute',
      AUTHOR     => 'Dominique Dumont (domi@barrayar.grenoble.hp.com)') : ()),

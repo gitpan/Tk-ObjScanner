@@ -41,19 +41,19 @@ use Tk::Frame;
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
 sub Populate
   {
     my ($cw,$args) = @_ ;
-     
+
     require Tk::Menubutton ;
     require Tk::HList ;
     require Tk::ROText ;
     require Tk::Adjuster ;
-    
+
     $cw->{chief} = delete $args->{'caller'} || delete $args->{'-caller'};
 
     my $destroyable = defined $args->{'destroyable'} ? 
