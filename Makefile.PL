@@ -16,6 +16,7 @@ WriteMakefile
      AUTHOR     => 'Dominique Dumont (domi@barrayar.grenoble.hp.com)') : ()),
    'PREREQ_PM' =>
    {
+    'Tk' =>0,
     'Tk::Adjuster' => 0,
     'Tk::HList' => 0,
     'Tk::ROText' => 0

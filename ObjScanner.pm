@@ -41,7 +41,7 @@ use Tk::Frame;
 @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-$VERSION = sprintf "%d.%03d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%03d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -167,9 +167,10 @@ sub isPseudoHash
     my $cw = shift ;
     my $item = shift;
 
-    return 0 unless ($cw->{viewpseudohash} &&
-                     isa($item,'ARRAY')              &&
-                     scalar @$item                   &&
+    return 0 unless (defined $item          &&
+                     $cw->{viewpseudohash}  &&
+                     isa($item,'ARRAY')     &&
+                     scalar @$item          &&
                      ref $item->[0] eq 'HASH');
 
     my $ret = scalar keys %{ $item->[0] } ;
