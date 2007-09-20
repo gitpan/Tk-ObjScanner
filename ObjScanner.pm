@@ -1,4 +1,4 @@
-# 	$Id: ObjScanner.pm,v 2.10 2004/07/30 11:57:35 domi Exp $	
+# 	$Id: ObjScanner.pm,v 2.11 2007-09-20 14:22:48 domi Exp $	
 
 package Tk::ObjScanner;
 
@@ -64,7 +64,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.10 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 
@@ -143,8 +143,13 @@ sub Populate
     my $display_view_pseudo_button = defined $args->{'-view_pseudo'} ||
       defined $args->{view_pseudo} ? 0 : 1;
 
-   my $view_pseudo = delete $args->{'-view_pseudo'} || 
+    my $view_pseudo = delete $args->{'-view_pseudo'} || 
       delete $args->{'view_pseudo'} || 0;
+
+    # override option for feature not supported by Perl 5.09 and later
+    if ($] >= 5.009) {
+	$view_pseudo = 0 ;
+    }
 
     croak "Missing caller argument in ObjScanner\n" 
       unless defined  $cw->{chief};
@@ -739,7 +744,8 @@ parameter is ignored if show_menu is unset.
 
 =item C<-view_pseudo>
 
-If set, will interpret pseudo hashes as hash (default 0)
+If set, will interpret pseudo hashes as hash (default 0). This option
+is disabled for Perl 5.09 and later.
 
 =item C<-show_tied>
 
@@ -806,7 +812,7 @@ The idea to use B::Deparse to view code ref.
 
 Dominique Dumont, dominique.dumont@hp.com
 
-Copyright (c) 1997-2004 Dominique Dumont. All rights reserved.
+Copyright (c) 1997-2004,2007 Dominique Dumont. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 

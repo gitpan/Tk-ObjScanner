@@ -12,7 +12,7 @@ WriteMakefile
     'demo/objscan.pl' => '$(INST_LIB)/Tk/demos/widtrib/objscan.pl'
    },
    ABSTRACT   => 'A scanner to view an object\'s attribute',
-   AUTHOR     => 'Dominique Dumont (domi@barrayar.grenoble.hp.com)',
+   AUTHOR     => 'Dominique Dumont (ddumont@cpan.org)',
    'PREREQ_PM' =>
    {
     'Tk' => 0,
