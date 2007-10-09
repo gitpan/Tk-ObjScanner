@@ -1,6 +1,8 @@
-# 	$Id: ObjScanner.pm,v 2.11 2007-09-20 14:22:48 domi Exp $	
+# 	$Id: ObjScanner.pm,v 2.12 2007-10-09 11:21:08 domi Exp $	
 
 package Tk::ObjScanner;
+
+require 5.006;
 
 use strict;
 use warnings ;
@@ -64,7 +66,7 @@ use Data::Dumper;
 our @ISA = qw(Tk::Derived Tk::Frame);
 *isa = \&UNIVERSAL::isa;
 
-our $VERSION = sprintf "%d.%03d", q$Revision: 2.11 $ =~ /(\d+)\.(\d+)/;
+our $VERSION = sprintf "%d.%03d", q$Revision: 2.12 $ =~ /(\d+)\.(\d+)/;
 
 Tk::Widget->Construct('ObjScanner');
 

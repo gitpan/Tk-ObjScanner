@@ -1,3 +1,9 @@
+2007-10-09  Dominique Dumont  <dominique.dumont at hp.com> v2.012
+
+	* ObjScanner.pm: Added require 5.006
+	* Makefile.PL: Added require 5.006 to avoid automatic test 
+	  failures from tester.cpan.org
+
 2007-09-20  Dominique Dumont  <dominique.dumont at hp.com> v2.011
 
 	* ObjScanner.pm (Populate): pseudo hashes are disabled for perl >=
