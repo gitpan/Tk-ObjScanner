@@ -1,15 +1,37 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Tk-ObjScanner
-version:      2.012
-version_from: ObjScanner.pm
-installdirs:  site
+---
+abstract: "'A scanner to view an object\\'s attribute"
+author:
+  - 'Dominique Dumont'
+build_requires:
+  Benchmark: '0'
+  FileHandle: '0'
+  Math::BigInt: '0'
+  Test::More: '0'
+  Tie::Hash: '0'
+  Tie::Scalar: '0'
+configure_requires:
+  ExtUtils::MakeMaker: '6.30'
+dynamic_config: 0
+generated_by: 'Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.142060'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: Tk-ObjScanner
 requires:
-    Scalar::Util:                  1.01
-    Tk:                            0
-    Tk::Adjuster:                  0
-    Tk::HList:                     0
-    Tk::ROText:                    0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30_01
+  B::Deparse: '0'
+  Carp: '0'
+  Data::Dumper: '0'
+  Scalar::Util: '1.01'
+  Tk: '0'
+  Tk::Adjuster: '0'
+  Tk::Derived: '0'
+  Tk::Frame: '0'
+  Tk::HList: '0'
+  Tk::Menubutton: '0'
+  Tk::ROText: '0'
+resources:
+  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Config-Model
+  homepage: https://github.com/dod38fr/config-model/wiki
+  repository: git://github.com/dod38fr/config-model.git
+version: '2.013'

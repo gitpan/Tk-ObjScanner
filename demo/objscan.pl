@@ -1,3 +1,11 @@
+#
+# This file is part of Tk-ObjScanner
+#
+# This software is copyright (c) 2014 by Dominique Dumont.
+#
+# This is free software; you can redistribute it and/or modify it under
+# the same terms as the Perl 5 programming language system itself.
+#
 # ObjScanner - data and object scanner
 
 use Tk ;

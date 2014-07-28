@@ -1,0 +1,63 @@
+{
+   "abstract" : "'A scanner to view an object\\'s attribute",
+   "author" : [
+      "Dominique Dumont"
+   ],
+   "dynamic_config" : 0,
+   "generated_by" : "Dist::Zilla version 5.019, CPAN::Meta::Converter version 2.142060",
+   "license" : [
+      "perl_5"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "Tk-ObjScanner",
+   "prereqs" : {
+      "configure" : {
+         "requires" : {
+            "ExtUtils::MakeMaker" : "6.30"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "B::Deparse" : "0",
+            "Carp" : "0",
+            "Data::Dumper" : "0",
+            "Scalar::Util" : "1.01",
+            "Tk" : "0",
+            "Tk::Adjuster" : "0",
+            "Tk::Derived" : "0",
+            "Tk::Frame" : "0",
+            "Tk::HList" : "0",
+            "Tk::Menubutton" : "0",
+            "Tk::ROText" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Benchmark" : "0",
+            "FileHandle" : "0",
+            "Math::BigInt" : "0",
+            "Test::More" : "0",
+            "Tie::Hash" : "0",
+            "Tie::Scalar" : "0"
+         }
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "bugtracker" : {
+         "mailto" : "bug-project@rt.cpan.org",
+         "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Config-Model"
+      },
+      "homepage" : "https://github.com/dod38fr/config-model/wiki",
+      "repository" : {
+         "type" : "git",
+         "url" : "git://github.com/dod38fr/config-model.git",
+         "web" : "http://github.com/dod38fr/config-model"
+      }
+   },
+   "version" : "2.013"
+}
+
