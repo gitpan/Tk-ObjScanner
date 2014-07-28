@@ -40,7 +40,7 @@ my %WriteMakefileArgs = (
     "Tie::Hash" => 0,
     "Tie::Scalar" => 0
   },
-  "VERSION" => "2.013",
+  "VERSION" => "2.014",
   "test" => {
     "TESTS" => "t/*.t"
   }

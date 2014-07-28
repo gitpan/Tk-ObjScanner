@@ -31,7 +31,7 @@ requires:
   Tk::Menubutton: '0'
   Tk::ROText: '0'
 resources:
-  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Config-Model
-  homepage: https://github.com/dod38fr/config-model/wiki
-  repository: git://github.com/dod38fr/config-model.git
-version: '2.013'
+  bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tk-ObjScanner
+  homepage: https://github.com/dod38fr/perl-tk-objscanner
+  repository: https://github.com/dod38fr/perl-tk-objscanner.git
+version: '2.014'

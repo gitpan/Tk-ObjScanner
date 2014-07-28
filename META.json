@@ -49,15 +49,15 @@
    "resources" : {
       "bugtracker" : {
          "mailto" : "bug-project@rt.cpan.org",
-         "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Config-Model"
+         "web" : "http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tk-ObjScanner"
       },
-      "homepage" : "https://github.com/dod38fr/config-model/wiki",
+      "homepage" : "https://github.com/dod38fr/perl-tk-objscanner",
       "repository" : {
          "type" : "git",
-         "url" : "git://github.com/dod38fr/config-model.git",
-         "web" : "http://github.com/dod38fr/config-model"
+         "url" : "https://github.com/dod38fr/perl-tk-objscanner.git",
+         "web" : "https://github.com/dod38fr/perl-tk-objscanner"
       }
    },
-   "version" : "2.013"
+   "version" : "2.014"
 }
 
