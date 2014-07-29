@@ -9,6 +9,7 @@ README
 demo/objscan.pl
 dist.ini
 lib/Tk/ObjScanner.pm
+lib/Tk/ObjScanner.pm~
 t/basic.t
 t/options.t
 t/pseudo_hash.t

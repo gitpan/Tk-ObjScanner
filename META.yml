@@ -1,5 +1,5 @@
 ---
-abstract: "'A scanner to view an object\\'s attribute"
+abstract: 'a GUI to scan any perl data structure or object'
 author:
   - 'Dominique Dumont'
 build_requires:
@@ -34,4 +34,4 @@ resources:
   bugtracker: http://rt.cpan.org/NoAuth/Bugs.html?Dist=Tk-ObjScanner
   homepage: https://github.com/dod38fr/perl-tk-objscanner
   repository: https://github.com/dod38fr/perl-tk-objscanner.git
-version: '2.014'
+version: '2.015'

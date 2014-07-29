@@ -10,7 +10,7 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  "ABSTRACT" => "'A scanner to view an object\\'s attribute",
+  "ABSTRACT" => "a GUI to scan any perl data structure or object",
   "AUTHOR" => "Dominique Dumont",
   "CONFIGURE_REQUIRES" => {
     "ExtUtils::MakeMaker" => "6.30"
@@ -40,7 +40,7 @@ my %WriteMakefileArgs = (
     "Tie::Hash" => 0,
     "Tie::Scalar" => 0
   },
-  "VERSION" => "2.014",
+  "VERSION" => "2.015",
   "test" => {
     "TESTS" => "t/*.t"
   }

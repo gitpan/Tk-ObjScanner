@@ -1,5 +1,5 @@
 {
-   "abstract" : "'A scanner to view an object\\'s attribute",
+   "abstract" : "a GUI to scan any perl data structure or object",
    "author" : [
       "Dominique Dumont"
    ],
@@ -58,6 +58,6 @@
          "web" : "https://github.com/dod38fr/perl-tk-objscanner"
       }
    },
-   "version" : "2.014"
+   "version" : "2.015"
 }
 
