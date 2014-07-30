@@ -7,7 +7,7 @@
 # the same terms as the Perl 5 programming language system itself.
 #
 package Tk::ObjScanner;
-
+$Tk::ObjScanner::VERSION = '2.016';
 require 5.006;
 
 use strict;

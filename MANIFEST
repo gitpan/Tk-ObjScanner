@@ -8,6 +8,7 @@ Makefile.PL
 README
 demo/objscan.pl
 dist.ini
+dist.ini~
 lib/Tk/ObjScanner.pm
 lib/Tk/ObjScanner.pm~
 t/basic.t
